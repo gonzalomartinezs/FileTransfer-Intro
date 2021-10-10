@@ -24,3 +24,5 @@ while (should_continue_reading):
         print(bytes.decode(), end = "")
     except EOFError:
         should_continue_reading = False
+
+
