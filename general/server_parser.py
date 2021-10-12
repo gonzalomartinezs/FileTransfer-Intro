@@ -1,4 +1,5 @@
 import argparse
+from shared_constants import *
 
 
 # Se crea el parser
@@ -21,7 +22,7 @@ group.add_argument("-q", "--quiet", action="store_true",
 # Pasa los argumentos introducidos a un objeto contenedor
 args = sv_parser.parse_args()
 
-if args.port < 1024 or args.port > 65535:
+if args.port < CONST_MIN_PORT or args.port > CONST_MAX_PORT:
     sv_parser.error("Port value must be in between [1024-65535]")
 
 print(args.host)
