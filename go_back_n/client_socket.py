@@ -8,7 +8,7 @@ class ClientSocket:
     def __init__(self):
         self.destination_ip = None
         self.destination_port = None
-        self.sckt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        #self.sckt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     # Ip y puerto al que conectar
     def connect_to(self, ip: str, port: int):
