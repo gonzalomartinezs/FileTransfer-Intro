@@ -45,6 +45,7 @@ class GbnSender:
     #PRIVATE
     def _confirm_packets(self):
         while (self.should_keep_running):
+            self.sckt.settimeout(ack_constants.SOCKET_TIMEOUT) #TODO este valor en realidad iria cambiando a lo que falta
             packet, sender = self.sckt.recvfrom(ack_constants.CONST_ACK_PACKET_SIZE)
             #TODO: VER SI SENDER ES LA TUPLA O SOLO EL IP
             if ((sender == (self.destination_ip, self.destination_port)) and (packet[ack_constants.MESSAGE_TYPE_INDEX] == ack_constants.CONST_ACK_NUM)):
