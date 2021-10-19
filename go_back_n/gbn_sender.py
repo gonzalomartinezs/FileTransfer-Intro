@@ -4,7 +4,7 @@ from general.atomic_wrapper import AtomicWrapper
 from gbn_window import GbnWindow
 import random
 import threading
-import ack_constants
+import general.ack_constants as ack_constants
 
 class InvalidDestinationError(Exception):
     pass
@@ -50,4 +50,4 @@ class GbnSender:
             #TODO: VER SI SENDER ES LA TUPLA O SOLO EL IP
             if ((sender == (self.destination_ip, self.destination_port)) and (packet[ack_constants.MESSAGE_TYPE_INDEX] == ack_constants.CONST_ACK_NUM)):
                 received_seq_num = packet[ack_constants.MESSAGE_TYPE_INDEX + 1:ack_constants.CONST_ACK_PACKET_SIZE]
-                if
+                self.window.update_base(received_seq_num)
