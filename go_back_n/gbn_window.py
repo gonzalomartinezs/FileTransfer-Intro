@@ -51,12 +51,27 @@ class GbnWindow:
 
     def update_base(self, received_seq_number: int):
         self.mutex.acquire()
-        
-        if self.base <= received_seq_number < self.next_seq_num:
+
+        is_sequential_case = self.base <= received_seq_number < self.next_seq_num
+        is_looping_case = (self.next_seq_num < self.base) and ((self.base <= received_seq_number) or (received_seq_number < self.next_seq_num))
+        if (is_sequential_case or is_looping_case):
+            del self.packet_buffer[:self._get_packets_between(received_seq_number)]
             self.base = received_seq_number + 1
-        elif self.next_seq_num < self.base:
-            if (self.base <= received_seq_number) or (received_seq_number < self.next_seq_num):
-                self.base = received_seq_number + 1
+            if (self.base > CONST_MAX_SEQ_NUM): #This is only for the edge case where received_seq_number == CONST_MAX_SEQ_NUM
+                self.base = 0
 
         self.mutex.release()
     
+
+    #PRIVATE
+    def _get_packets_between(self, num):
+        acknowledged_packets = 0
+        aux = num - self.base
+        if (aux < 0):
+            #TODO: CHEQUEAR SI ESTA CUENTA ESTA BIEN
+            acknowledged_packets = ((CONST_MAX_SEQ_NUM + 1) - self.base) + (num + 1)
+        else:
+            #TODO: CHEQUEAR SI ESTA CUENTA ESTA BIEN
+            acknowledged_packets = aux + 1
+
+        return acknowledged_packets

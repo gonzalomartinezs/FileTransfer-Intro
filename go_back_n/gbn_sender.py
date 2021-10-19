@@ -5,6 +5,7 @@ from gbn_window import GbnWindow
 import random
 import threading
 import general.ack_constants as ack_constants
+import time
 
 class InvalidDestinationError(Exception):
     pass
@@ -44,10 +45,23 @@ class GbnSender:
 
     #PRIVATE
     def _confirm_packets(self):
-        while (self.should_keep_running):
-            self.sckt.settimeout(ack_constants.SOCKET_TIMEOUT) #TODO este valor en realidad iria cambiando a lo que falta
+        base_timeout = ack_constants.BASE_TIMEOUT / 1000
+        checked_all_messages = False
+        while (self.should_keep_running or not checked_all_messages):
+            waited_time = 0
+            self.sckt.settimeout(base_timeout - waited_time)
+            before_recv_time = time.time()
             packet, sender = self.sckt.recvfrom(ack_constants.CONST_ACK_PACKET_SIZE)
-            #TODO: VER SI SENDER ES LA TUPLA O SOLO EL IP
-            if ((sender == (self.destination_ip, self.destination_port)) and (packet[ack_constants.MESSAGE_TYPE_INDEX] == ack_constants.CONST_ACK_NUM)):
-                received_seq_num = packet[ack_constants.MESSAGE_TYPE_INDEX + 1:ack_constants.CONST_ACK_PACKET_SIZE]
-                self.window.update_base(received_seq_num)
+            waited_time += time.time() - before_recv_time
+            if (waited_time >= base_timeout):
+                pass
+                #TODO se trigereo un timeout, tenemos que reenviar los packets desde base hasta next_seq_number - 1
+            else:
+                if ((sender == (self.destination_ip, self.destination_port)) and (packet[ack_constants.MESSAGE_TYPE_INDEX] == ack_constants.CONST_ACK_NUM)):
+                    received_seq_num = packet[ack_constants.MESSAGE_TYPE_INDEX + 1:ack_constants.CONST_ACK_PACKET_SIZE]
+                    self.window.update_base(received_seq_num)
+                    #TODO: SACAR DEL CACHE DE PAQUETES TODOS LOS PAQUETES HASTA EL QUE SE ACKNOWLEDGEO
+
+            #TODO: UPDATEAR checked_all_messages PARA QUE SE VAYA DEL LOOP CUANDO TERMINEN DE MANDARSE TODOS LOS MENSAJES
+            #      TAMBIEN VAMOS A TENER QUE UPDATEARLA CUANDO SE RECIBAN MENSAJES NUEVOS, AUNQUE PUEDE CHEQUEARSE MIRANDO SI HAY DATOS EN
+            #      EL CACHE DE MENSAJES DE LOS CUALES HAY QUE CONFIRMAR SU ACK
