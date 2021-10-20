@@ -70,7 +70,7 @@ class GbnSender:
                 self._resend_all_packets()
             else:
                 if ((sender == (self.destination_ip, self.destination_port)) and (packet[ack_constants.MESSAGE_TYPE_INDEX] == ack_constants.CONST_ACK_NUM)):
-                    received_seq_num = packet[ack_constants.MESSAGE_TYPE_INDEX + 1:ack_constants.CONST_ACK_PACKET_SIZE]
+                    received_seq_num = int.from_bytes(packet[ack_constants.MESSAGE_TYPE_INDEX + 1:ack_constants.CONST_ACK_PACKET_SIZE], byteorder='big', signed=False)
                     #TODO: PASAR EL received_seq_num DE BIG ENDIAN AL ENDIANNESS DE LA PC
                     checked_all_messages = self.window.update_base(received_seq_num)
                     #TODO: RESETEAR WAIT TIME PARA EL PROXIMO PAQUETE
