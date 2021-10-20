@@ -21,6 +21,7 @@ class GbnWindow:
         self.next_seq_num += 1
         #TODO: RETORNAR EL PAQUETE PROCESADO
         self.mutex.release()
+        return packet
 
     def acknowledge(self):
         self.mutex.acquire()

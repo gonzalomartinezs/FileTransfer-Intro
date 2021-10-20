@@ -35,7 +35,7 @@ class GbnSender:
             if (self.destination_ip == None) or (self.destination_port == None):
                 raise InvalidDestinationError()
 
-            if (len(bytes) <= shared_constants.CONST_MAX_BUFFER_SIZE):
+            if (len(message) <= shared_constants.CONST_MAX_BUFFER_SIZE):
                 packet = self.window.add_packet(message)
                 self.sckt.sendto(packet, (self.destination_ip, self.destination_port))
             else:
@@ -60,7 +60,10 @@ class GbnSender:
         while (self.should_keep_running or not checked_all_messages):
             self.sckt.settimeout(base_timeout - waited_time)
             before_recv_time = time.time()
-            packet, sender = self.sckt.recvfrom(ack_constants.CONST_ACK_PACKET_SIZE)
+            try:
+                packet, sender = self.sckt.recvfrom(ack_constants.CONST_ACK_PACKET_SIZE)
+            except socket.timeout:
+                pass
             waited_time += time.time() - before_recv_time
             if (waited_time >= base_timeout):
                 waited_time = 0
