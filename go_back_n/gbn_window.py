@@ -17,6 +17,7 @@ class GbnWindow:
         while self._is_full():
             self.cv.wait()
         #TODO: PROCESAR EL PAQUETE PARA QUE TENGA TODA LA METADATA
+        #EL SEQUENCE NUMBER RECIBIDO TIENE QUE ESTAR EN BIG ENDIAN
         self.packet_buffer.append(packet)
         self.next_seq_num += 1
         #TODO: RETORNAR EL PAQUETE PROCESADO
