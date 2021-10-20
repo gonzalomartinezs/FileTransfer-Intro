@@ -1,5 +1,6 @@
 import random
 import threading
+import socket
 
 CONST_MAX_SEQ_NUM = 2**16 - 1
 
@@ -17,11 +18,9 @@ class GbnWindow:
         self.mutex.acquire()
         while self._is_full():
             self.cv.wait()
-        #TODO: PROCESAR EL PAQUETE PARA QUE TENGA TODA LA METADATA
-        #EL SEQUENCE NUMBER RECIBIDO TIENE QUE ESTAR EN BIG ENDIAN
+        packet = (self.next_seq_number).to_bytes(2, byteorder='big') + packet
         self.packet_buffer.append(packet)
-        self.next_seq_num += 1
-        #TODO: RETORNAR EL PAQUETE PROCESADO
+        self._add_to_seq_num()
         self.cv.notify_all()
         self.mutex.release()
         return packet
@@ -100,3 +99,8 @@ class GbnWindow:
             acknowledged_packets = aux + 1
 
         return acknowledged_packets
+
+    def _add_to_seq_num(self):
+        self.next_seq_num += 1
+        if (self.next_seq_num > CONST_MAX_SEQ_NUM):
+            self.next_seq_num = 0
