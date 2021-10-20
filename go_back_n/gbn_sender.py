@@ -58,20 +58,18 @@ class GbnSender:
         checked_all_messages = False
         waited_time = 0
         while (self.should_keep_running or not checked_all_messages):
+            self.window.wait_for_sent_packet()
             self.sckt.settimeout(base_timeout - waited_time)
             before_recv_time = time.time()
             try:
                 packet, sender = self.sckt.recvfrom(ack_constants.CONST_ACK_PACKET_SIZE)
+                waited_time += time.time() + before_recv_time
+                if (sender == (self.destination_ip, self.destination_port)) and (packet[ack_constants.MESSAGE_TYPE_INDEX] == ack_constants.CONST_ACK_NUM):
+                    received_seq_num = int.from_bytes(packet[ack_constants.MESSAGE_TYPE_INDEX + 1:ack_constants.CONST_ACK_PACKET_SIZE], byteorder='big', signed=False)
+                    checked_all_messages = self.window.update_base(received_seq_num)
+                    waited_time = 0
             except socket.timeout:
-                pass
-            waited_time += time.time() - before_recv_time
-            if (waited_time >= base_timeout):
                 waited_time = 0
                 self._resend_all_packets()
-            else:
-                if ((sender == (self.destination_ip, self.destination_port)) and (packet[ack_constants.MESSAGE_TYPE_INDEX] == ack_constants.CONST_ACK_NUM)):
-                    received_seq_num = int.from_bytes(packet[ack_constants.MESSAGE_TYPE_INDEX + 1:ack_constants.CONST_ACK_PACKET_SIZE], byteorder='big', signed=False)
-                    #TODO: PASAR EL received_seq_num DE BIG ENDIAN AL ENDIANNESS DE LA PC
-                    checked_all_messages = self.window.update_base(received_seq_num)
-                    #TODO: RESETEAR WAIT TIME PARA EL PROXIMO PAQUETE
+            
                     

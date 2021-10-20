@@ -21,6 +21,7 @@ class GbnWindow:
         self.packet_buffer.append(packet)
         self.next_seq_num += 1
         #TODO: RETORNAR EL PAQUETE PROCESADO
+        self.cv.notify_all()
         self.mutex.release()
         return packet
 
@@ -73,6 +74,12 @@ class GbnWindow:
         self.mutex.release()
         return ret_val
         
+    def wait_for_sent_packet(self):
+        self.mutex.acquire()
+        while (len(self.packet_buffer) == 0):
+            self.cv.wait()
+        self.mutex.release()
+
     #PRIVATE
     def _is_full(self) -> bool:
         return (self.next_seq_num - self.base) == self.window_size
