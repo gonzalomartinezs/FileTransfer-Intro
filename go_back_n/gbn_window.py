@@ -10,6 +10,7 @@ class GbnWindow:
         self.base = random.randrange(0, CONST_MAX_SEQ_NUM)
         self.next_seq_num = self.base
         self.packet_buffer = []
+        self.closed = False
         self.cv = threading.Condition(self.mutex)
 
     def add_packet(self, packet: bytes):
@@ -76,8 +77,14 @@ class GbnWindow:
         
     def wait_for_sent_packet(self):
         self.mutex.acquire()
-        while (len(self.packet_buffer) == 0):
+        while ((len(self.packet_buffer) == 0) and not self.closed):
             self.cv.wait()
+        self.mutex.release()
+
+    def close(self):
+        self.mutex.acquire()
+        self.closed = True
+        self.cv.notify_all()
         self.mutex.release()
 
     #PRIVATE

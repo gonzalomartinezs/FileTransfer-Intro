@@ -45,10 +45,10 @@ class GbnSender:
 
     def close(self):
         self.should_keep_running = False
+        self.window.close()
         self.ack_thread.join()
 
     #PRIVATE
-
     def _resend_all_packets(self):
         for packet in self.window.get_unacknowledged_packets():
             self.sckt.sendto(packet, (self.destination_ip, self.destination_port))
