@@ -21,6 +21,7 @@ class GbnWindow:
         packet = (self.next_seq_number).to_bytes(2, byteorder='big') + packet
         self.packet_buffer.append(packet)
         self._add_to_seq_num()
+        #TODO: VER SI AGREGAMOS CHEQUEO DE SI HAY QUE HACER EL NOTIFY
         self.cv.notify_all()
         self.mutex.release()
         return packet
