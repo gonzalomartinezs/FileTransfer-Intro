@@ -18,8 +18,7 @@ class Receiver:
         self.mutex = threading.Lock()
         self.cv = threading.Condition(self.mutex)
         self.should_keep_running = True
-        #TODO: AGREGAR CHEQUEO DE IP
-
+        #TODO agregar IP y port
 
     def set_reading_port(self, port: int):
         self.port = port
