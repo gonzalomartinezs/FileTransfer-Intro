@@ -9,8 +9,7 @@ class GbnWindow:
     def __init__(self, window_size: int):
         self.mutex = threading.Lock()
         self.window_size = window_size
-        #self.base = random.randrange(0, CONST_MAX_SEQ_NUM)
-        self.base = 0
+        self.base = random.randrange(0, CONST_MAX_SEQ_NUM)
         self.next_seq_num = self.base
         self.packet_buffer = []
         self.closed = False
