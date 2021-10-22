@@ -18,7 +18,9 @@ Se listarán las diferentes bibliotecas necesarias para correr el proyecto
 
 Para ejecutar el cliente deberán ingresarse los comandos en la forma
 
-./client.py [-h] [-v | -q] host port [dest/source] name 
+```python
+./client.py [-h] [-v | -q] host port [dest/source] name
+```
 
 El cliente cuenta con dos modos de ejecución:
 
@@ -30,39 +32,41 @@ A continuación se listarán los comandos para cada modo.
 #### upload-file
 
 Positional arguments:
-  host           service IP address
-  port           service port
-  source         source file path
-  name           file name
+*  host           service IP address
+*  port           service port
+*  source         source file path
+*  name           file name
 
 Optional arguments:
-  -h, --help     show this help message and exit
-  -v, --verbose  increase output verbosity
-  -q, --quiet    decrease output verbosity
+*  -h, --help     show this help message and exit
+*  -v, --verbose  increase output verbosity
+*  -q, --quiet    decrease output verbosity
 
 #### download-file
 Positional arguments:
-  host           service IP address
-  port           service port
-  dest           destination file path
-  name           file name
+*  host           service IP address
+*  port           service port
+*  dest           destination file path
+*  name           file name
 
 Optional arguments:
-  -h, --help     show this help message and exit
-  -v, --verbose  increase output verbosity
-  -q, --quiet    decrease output verbosity
+*  -h, --help     show this help message and exit
+*  -v, --verbose  increase output verbosity
+*  -q, --quiet    decrease output verbosity
 
 ### Servidor
 El servidor cuenta con un solo comando de ejecución
 
+```python
 ./client.py [-h] [-v | -q] host port storage
+```
 
 Positional arguments:
-  host           service IP address
-  port           service port
-  storage        storage dir path
+*  host           service IP address
+*  port           service port
+*  storage        storage dir path
 
 Optional arguments:
-  -h, --help     show this help message and exit
-  -v, --verbose  increase output verbosity
-  -q, --quiet    decrease output verbosity
+*  -h, --help     show this help message and exit
+*  -v, --verbose  increase output verbosity
+*  -q, --quiet    decrease output verbosity
