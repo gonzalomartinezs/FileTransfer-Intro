@@ -32,6 +32,9 @@ class ReliableUDPSocket:
     def receive(self) -> bytes:
         return self.receiver.receive()
 
+    def close(self):
+        self.sender.close()
+
     #PRIVATE
     def _receive_messages(self): #TODO tenemos que chequear que los mensajes esten bien armados en cada caso, por ej que el mensaje de tipo ACK no tenga mas de 2 bytes despues del byte del ACK (que son los 2 bytes del seq_num)
         while (self.should_keep_going):

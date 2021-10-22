@@ -1,5 +1,4 @@
 import threading
-import socket
 import general.ack_constants as ack_constants
 from general.atomic_udp_socket import AtomicUDPSocket
 import general.shared_constants as shared_constants

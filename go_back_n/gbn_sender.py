@@ -51,7 +51,6 @@ class GbnSender:
         self.should_keep_running = False
         self.window.close()
         self.ack_thread.join()
-        self.sender.close()
 
     #PRIVATE
     def _resend_all_packets(self):
