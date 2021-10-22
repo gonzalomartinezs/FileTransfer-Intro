@@ -61,7 +61,7 @@ class StopAndWaitSender:
                 response, sender = self.sckt.recvfrom(ack_constants.ACK_PACKET_SIZE)#3 bytes = byte de ack + 2 bytes de seq num
                 waited_time = time.time() - sent_time
                 #Check if response is an ACK and if it is from the address we are sending to
-                if (response[0] == ack_constants.ACK_NUM) and (sender == (self.destination_ip, self.destination_port)):
+                if (response[0] == ack_constants.ACK_TYPE_NUM) and (sender == (self.destination_ip, self.destination_port)):
                     if int.from_bytes(response[1:],byteorder='big', signed=False) == self.seq_num: #If the response received is the current seq_num we can continue sending the next packet
                         self.seq_num += 1
                         break

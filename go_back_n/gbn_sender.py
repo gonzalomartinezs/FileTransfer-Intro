@@ -1,12 +1,14 @@
-import socket
 from general.atomic_udp_socket import AtomicUDPSocket
 import general.shared_constants as shared_constants
 from general.atomic_wrapper import AtomicWrapper
 from go_back_n.gbn_window import GbnWindow
-import random
 import threading
 import general.ack_constants as ack_constants
+import general.shared_constants as shared_constants
 import time
+from queue import Queue
+import queue
+
 
 class InvalidDestinationError(Exception):
     pass
@@ -18,11 +20,12 @@ class CloseSenderError(Exception):
     pass
 
 class GbnSender:
-    def __init__(self, stored_socket: AtomicUDPSocket, window_size: int):
+    def __init__(self, sender: AtomicUDPSocket, receiver: Queue, window_size: int):
         self.destination_ip = None
         self.destination_port = None
         self.window = GbnWindow(window_size)
-        self.sckt = stored_socket
+        self.sender = sender
+        self.receiver = receiver
         self.should_keep_running = True
         self.ack_thread = threading.Thread(target=self._confirm_packets)
         self.ack_thread.start()
@@ -36,9 +39,9 @@ class GbnSender:
             if (self.destination_ip == None) or (self.destination_port == None):
                 raise InvalidDestinationError()
 
-            if ((len(message) + ack_constants.SEQ_NUM_SIZE) <= shared_constants.CONST_MAX_BUFFER_SIZE):
+            if ((len(message) + shared_constants.METADATA_SIZE) <= shared_constants.CONST_MAX_BUFFER_SIZE):
                 packet = self.window.add_packet(message)
-                self.sckt.sendto(packet, (self.destination_ip, self.destination_port))
+                self.sender.sendto(packet, (self.destination_ip, self.destination_port))
             else:
                 raise InvalidMessageSize()
         else:
@@ -48,12 +51,12 @@ class GbnSender:
         self.should_keep_running = False
         self.window.close()
         self.ack_thread.join()
-        self.sckt.close()
+        self.sender.close()
 
     #PRIVATE
     def _resend_all_packets(self):
         for packet in self.window.get_unacknowledged_packets():
-            self.sckt.sendto(packet, (self.destination_ip, self.destination_port))
+            self.sender.sendto(packet, (self.destination_ip, self.destination_port))
 
     def _confirm_packets(self):
         base_timeout = ack_constants.BASE_TIMEOUT / 1000
@@ -61,15 +64,15 @@ class GbnSender:
         waited_time = 0
         while (self.should_keep_running or not checked_all_messages):
             self.window.wait_for_sent_packet()
-            self.sckt.settimeout(base_timeout - waited_time)
+            time_until_timeout = base_timeout - waited_time
             before_recv_time = time.time()
             try:
-                packet, sender = self.sckt.recvfrom(ack_constants.ACK_PACKET_SIZE)
+                packet, sender = self.receiver.get(timeout=time_until_timeout)
                 waited_time += time.time() - before_recv_time
-                if (sender == (self.destination_ip, self.destination_port)) and (packet[ack_constants.MESSAGE_TYPE_INDEX] == ack_constants.ACK_NUM):
-                    received_seq_num = int.from_bytes(packet[ack_constants.MESSAGE_TYPE_INDEX + 1:ack_constants.ACK_PACKET_SIZE], byteorder='big', signed=False)
+                if (sender == (self.destination_ip, self.destination_port)):
+                    received_seq_num = int.from_bytes(packet, byteorder='big', signed=False)
                     checked_all_messages = self.window.update_base(received_seq_num)
                     waited_time = 0
-            except socket.timeout:
+            except queue.Empty:
                 waited_time = 0
                 self._resend_all_packets()
