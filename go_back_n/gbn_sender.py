@@ -27,7 +27,7 @@ class GbnSender:
         self.sender = sender
         self.receiver = receiver
         self.should_keep_running = True
-        self.ack_thread = threading.Thread(target=self._confirm_packets)
+        self.ack_thread = threading.Thread(target=self._confirm_packets, daemon=True)
         self.ack_thread.start()
 
     def set_destination(self, destination_ip: str, destination_port: int):

@@ -48,7 +48,7 @@ class Receiver:
             self.mutex.acquire()
             if (packet_seq_number == self.expected_seq_num):
                 if (len(self.received_packets_queue) < PACKET_QUEUE_SIZE):
-                    self.received_packets_queue.append(packet[ack_constants.SEQ_NUM_SIZE:])
+                    self.received_packets_queue.append(packet[shared_constants.SEQ_NUM_SIZE:])
                     self.cv.notify_all() #TODO: VER SI CHEQUEAMOS QUE ANTES HUBIERA 0 PAQUETES PARA HACER EL NOTIFY
                     ack_message = (ack_constants.ACK_TYPE_NUM).to_bytes(1, byteorder='big', signed=False) + (self.expected_seq_num).to_bytes(2, byteorder='big', signed=False)
                     self.sender.sendto(ack_message, sender_addr)
