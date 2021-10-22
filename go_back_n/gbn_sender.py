@@ -1,4 +1,5 @@
 import socket
+from general.atomic_udp_socket import AtomicUDPSocket
 import general.shared_constants as shared_constants
 from general.atomic_wrapper import AtomicWrapper
 from go_back_n.gbn_window import GbnWindow
@@ -17,11 +18,11 @@ class CloseSenderError(Exception):
     pass
 
 class GbnSender:
-    def __init__(self, window_size):
+    def __init__(self, stored_socket: AtomicUDPSocket, window_size: int):
         self.destination_ip = None
         self.destination_port = None
         self.window = GbnWindow(window_size)
-        self.sckt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sckt = stored_socket
         self.should_keep_running = True
         self.ack_thread = threading.Thread(target=self._confirm_packets)
         self.ack_thread.start()
@@ -47,6 +48,7 @@ class GbnSender:
         self.should_keep_running = False
         self.window.close()
         self.ack_thread.join()
+        self.sckt.close()
 
     #PRIVATE
     def _resend_all_packets(self):
@@ -63,7 +65,7 @@ class GbnSender:
             before_recv_time = time.time()
             try:
                 packet, sender = self.sckt.recvfrom(ack_constants.ACK_PACKET_SIZE)
-                waited_time += time.time() + before_recv_time
+                waited_time += time.time() - before_recv_time
                 if (sender == (self.destination_ip, self.destination_port)) and (packet[ack_constants.MESSAGE_TYPE_INDEX] == ack_constants.ACK_NUM):
                     received_seq_num = int.from_bytes(packet[ack_constants.MESSAGE_TYPE_INDEX + 1:ack_constants.ACK_PACKET_SIZE], byteorder='big', signed=False)
                     checked_all_messages = self.window.update_base(received_seq_num)

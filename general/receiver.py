@@ -9,9 +9,9 @@ class ClosedSocketError(Exception):
     pass
 
 class Receiver:
-    def __init__(self, expected_seq_num, port):
-        self.sckt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.sckt.bind(('127.0.0.1', port))
+    def __init__(self, received_socket, expected_seq_num):
+        #self.sckt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sckt = received_socket
         self.expected_seq_num = expected_seq_num
         self.received_packets_queue: list[bytes] = []
         self.mutex = threading.Lock()
@@ -20,9 +20,6 @@ class Receiver:
         self.ack_thread = threading.Thread(target=self._receive_packets, daemon=True)
         self.ack_thread.start()
         #TODO: AGREGAR CHEQUEO DE IP
-
-    def set_reading_port(self, port: int):
-        self.port = port
 
     def receive(self) -> bytes:
         packet = None

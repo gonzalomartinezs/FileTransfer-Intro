@@ -16,3 +16,4 @@ class AtomicWrapper:
         ret = self.data
         self.mutex.release()
         return ret
+
