@@ -21,6 +21,7 @@ class ReliableUDPSocket:
         self.receiver = None
         self.thread = None
         self.should_keep_going = True
+        self.peer_addr = None
         self.base_seq_num = random.randrange(0, shared_constants.MAX_SEQ_NUM)
         #TODO: VAMOS A TENER QUE PUSHEAR UN MENSAJE DE QUE SE CERRO LA COLA PARA QUE DEJE DE INTENTAR LEER Y SE BLOQUEE
 
@@ -47,7 +48,7 @@ class ReliableUDPSocket:
                 self.sckt.sendto(shared_constants.SYN_TYPE_NUM.to_bytes(1, byteorder='big', signed=False) + self.base_seq_num.to_bytes(2, byteorder='big', signed=False), addr)
                 waited_time = 0
 
-        self.sckt.settimeout(None) #This removes the timeout
+        self.sckt.settimeout(None) #This removes the timeout we were setting
         self._initialize_connection(r_addr, connection_seq_num)
 
 
@@ -64,7 +65,7 @@ class ReliableUDPSocket:
                 n_sckt = ReliableUDPSocket(self.use_goback_n)
                 n_sckt.accepted_connectons = self.accepted_connectons
                 n_sckt._initialize_connection(addr, connection_seq_num)
-                n_sckt.sender.send(shared_constants.OK_TYPE_NUM.to_bytes(1, byteorder='big', signed=False) + self.base_seq_num.to_bytes(2, byteorder='big', signed=False), False)
+                n_sckt.sender.send(shared_constants.OK_TYPE_NUM.to_bytes(1, byteorder='big', signed=False) + self.base_seq_num.to_bytes(2, byteorder='big', signed=False), add_metadata=False)
                 self.accepted_connectons.add_connection(addr)
                 connection_accepted = True
 
@@ -79,11 +80,16 @@ class ReliableUDPSocket:
 
     def close(self): #TODO borrar del AcceptedConnections el addr asignado si es que el socket fue creado por un accept
         self.sender.close()
+        self.receiver.close()
+        self.sckt.close()
+        if self.accepted_connectons != None: #This indicates that this socket was created by an accepter
+            self.accepted_connectons.remove_connection(self.peer_addr)
 
 
 
     #PRIVATE
     def _initialize_connection(self, dest_addr: tuple[str, int], connection_seq_num: int): #TODO el base_seq_num en realidad tengo que cambiarlo en el accept todo el tiempo, sino todos los sockets tienen el mismo!
+        self.peer_addr = dest_addr
         self.receiver = Receiver(self.sckt, self.msg_queue, connection_seq_num)
         if (self.use_goback_n):
             self.sender = GbnSender(self.sckt, self.ack_queue, 10, self.base_seq_num) #TODO volar el 10 hardcodeado del window_size
