@@ -93,8 +93,7 @@ class ReliableUDPSocket:
         return self.receiver.receive()
 
     # IMPORTANT: DO NOT attempt to reuse the socket after executing close() on it!
-    def close(self): #TODO borrar del AcceptedConnections el addr asignado si es que el socket fue creado por un accept
-        #TODO chequear si este socket es de tipo listen o no para setear la variable booleana para que corte y joinear con el thread
+    def close(self):
         if self.type == ReliableUDPSocketType.CLIENT:
             self.sender.close()
             self.receiver.close()
@@ -118,13 +117,13 @@ class ReliableUDPSocket:
 
     #PRIVATE
     def _initialize_connection(self, dest_addr: tuple[str, int], base_seq_num: int, connection_seq_num: int):
+        self.sckt.connect(dest_addr) #Now we can only receive packets from this address
         self.peer_addr = dest_addr
         self.receiver = Receiver(self.sckt, self.msg_queue, connection_seq_num)
         if (self.use_goback_n):
             self.sender = GbnSender(self.sckt, self.ack_queue, 10, base_seq_num) #TODO volar el 10 hardcodeado del window_size
         else:
             self.sender = StopAndWaitSender(self.sckt, self.ack_queue, base_seq_num)
-        self.sender.set_destination(dest_addr)
         self.thread = threading.Thread(target = self._receive_messages, daemon=True)
         self.thread.start()
 
@@ -150,19 +149,18 @@ class ReliableUDPSocket:
                 pass
 
 
-    #TODO hay que chequear que los mensajes nos vengan del tipo con el que entablamos la conexion
     def _receive_messages(self): #TODO tenemos que chequear que los mensajes esten bien armados en cada caso, por ej que el mensaje de tipo ACK no tenga mas de 2 bytes despues del byte del ACK (que son los 2 bytes del seq_num)
         self.sckt.settimeout(0.5) #TODO ver si hay una alternativa a un timeout para el tema del close, pero creo que no hay mucha
         while (self.keep_receiving_messages):
             try:
-                packet, addr = self.sckt.recvfrom(shared_constants.CONST_MAX_BUFFER_SIZE)
+                packet = self.sckt.recv(shared_constants.CONST_MAX_BUFFER_SIZE)
                 packet_type = packet[shared_constants.MSG_TYPE_INDEX]
                 packet = packet[shared_constants.MSG_TYPE_INDEX+1:]
                 if packet_type == ack_constants.ACK_TYPE_NUM:
-                    self.ack_queue.put((packet, addr))
+                    self.ack_queue.put(packet)
                 elif packet_type == shared_constants.MSG_TYPE_NUM:
-                    self.msg_queue.put((packet, addr))
+                    self.msg_queue.put(packet)
                 elif packet_type == shared_constants.OK_TYPE_NUM:
-                    self.msg_queue.put((packet, addr))
+                    self.msg_queue.put(packet)
             except:
                 pass

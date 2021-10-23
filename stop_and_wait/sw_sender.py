@@ -1,10 +1,9 @@
 import sys
-sys.path.insert(1, '../')
+sys.path.insert(1, '../') #TODO wtf is this?
 import general.shared_constants as shared_constants
 import general.ack_constants as ack_constants
 import general.atomic_udp_socket as AtomicUDPSocket
 import time
-import random
 import socket
 
 class InvalidDestinationError(Exception):
@@ -18,21 +17,12 @@ class CloseSenderError(Exception):
 
 class StopAndWaitSender:
     def __init__(self, socket: AtomicUDPSocket, base_seq_num: int):
-        self.destination_ip = None
-        self.destination_port = None
         self.sckt = socket
         self.should_keep_running = True
         self.seq_num = base_seq_num
-        
-    def set_destination(self, addr: tuple[str, int]):
-        self.destination_ip = addr[0]
-        self.destination_port = addr[1]
 
     def send(self, message: bytes):
         if (self.should_keep_running):
-            if (self.destination_ip == None) or (self.destination_port == None):
-                raise InvalidDestinationError()
-
             if (len(message) + ack_constants.SEQ_NUM_SIZE <= shared_constants.CONST_MAX_BUFFER_SIZE): #-2 por los 2 bytes del seq num
                 self._try_send(message)
             else:
@@ -47,7 +37,7 @@ class StopAndWaitSender:
 
     def _try_send(self, message: bytes):
         message = self.seq_num.to_bytes(ack_constants.SEQ_NUM_SIZE,"big") + message #Build message with sequence number
-        self.sckt.sendto(message, (self.destination_ip, self.destination_port)) #Send message
+        self.sckt.send(message) #Send message
 
         #Setup timeout
         sent_time = time.time() 
@@ -57,10 +47,10 @@ class StopAndWaitSender:
         
         while(1): 
             try:
-                response, sender = self.sckt.recvfrom(ack_constants.ACK_PACKET_SIZE)#3 bytes = byte de ack + 2 bytes de seq num
+                response = self.sckt.recv(ack_constants.ACK_PACKET_SIZE)#3 bytes = byte de ack + 2 bytes de seq num
                 waited_time = time.time() - sent_time
-                #Check if response is an ACK and if it is from the address we are sending to
-                if (response[0] == ack_constants.ACK_TYPE_NUM) and (sender == (self.destination_ip, self.destination_port)):
+                #Check if response is an ACK
+                if response[0] == ack_constants.ACK_TYPE_NUM:
                     if int.from_bytes(response[1:],byteorder='big', signed=False) == self.seq_num: #If the response received is the current seq_num we can continue sending the next packet
                         self.seq_num += 1
                         break
@@ -70,7 +60,7 @@ class StopAndWaitSender:
                         #If we received a delayed ack from a previous package we ignore it
 
             except socket.timeout:
-                self.sckt.sendto(message, (self.destination_ip, self.destination_port)) #Resend message if timeout occurred
+                self.sckt.send(message) #Resend message if timeout occurred
                 
                 #Reset timeout
                 sent_time = time.time() 

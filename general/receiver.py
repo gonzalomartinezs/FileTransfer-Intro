@@ -41,12 +41,12 @@ class Receiver:
 
     def close(self):
         self.should_keep_running = False
-        self.receiver.put((None, None)) #This avoids getting blocked in the receiver.get() method call
+        self.receiver.put(None) #This avoids getting blocked in the receiver.get() method call
         self.ack_thread.join()
 
     # PRIVATE
     def _receive_packets(self):
-        packet, sender_addr = self.receiver.get() #TODO agregar chequeo de ip y port del mensaje
+        packet = self.receiver.get()
         while (self.should_keep_running):
             packet_seq_number = int.from_bytes(packet[:shared_constants.SEQ_NUM_SIZE], byteorder='big', signed=False)
             self.mutex.acquire()
@@ -55,11 +55,11 @@ class Receiver:
                     self.received_packets_queue.append(packet[shared_constants.SEQ_NUM_SIZE:])
                     self.cv.notify_all() #TODO: VER SI CHEQUEAMOS QUE ANTES HUBIERA 0 PAQUETES PARA HACER EL NOTIFY
                     ack_message = (ack_constants.ACK_TYPE_NUM).to_bytes(1, byteorder='big', signed=False) + (self.expected_seq_num).to_bytes(2, byteorder='big', signed=False)
-                    self.sender.sendto(ack_message, sender_addr)
+                    self.sender.send(ack_message)
                     self.expected_seq_num += 1
             else:
                 latest_ack_seq_num = (self.expected_seq_num - 1) if self.expected_seq_num != 0 else shared_constants.MAX_SEQ_NUM
                 ack_message = (ack_constants.ACK_TYPE_NUM).to_bytes(1, byteorder='big', signed=False) + (latest_ack_seq_num-1).to_bytes(2, byteorder='big', signed=False)
-                self.sender.sendto(ack_message, sender_addr)
+                self.sender.send(ack_message)
             self.mutex.release()
-            packet, sender_addr = self.receiver.get() #TODO agregar chequeo de ip y port del mensaje
+            packet = self.receiver.get()
