@@ -1,6 +1,5 @@
 from general.atomic_udp_socket import AtomicUDPSocket
 import general.shared_constants as shared_constants
-from general.atomic_wrapper import AtomicWrapper
 from go_back_n.gbn_window import GbnWindow
 import threading
 import general.ack_constants as ack_constants
@@ -61,17 +60,22 @@ class GbnSender:
         base_timeout = ack_constants.BASE_TIMEOUT / 1000
         checked_all_messages = False
         waited_time = 0
+        time_until_timeout = base_timeout
+
         while (self.should_keep_running or not checked_all_messages):
-            self.window.wait_for_sent_packet()
-            time_until_timeout = base_timeout - waited_time
             before_recv_time = time.time()
+            self.window.wait_for_sent_packet()
             try:
+                if time_until_timeout <= 0:
+                    self._resend_all_packets()
+                    waited_time = 0
+                    time_until_timeout = base_timeout
                 packet, sender = self.receiver.get(timeout=time_until_timeout)
                 waited_time += time.time() - before_recv_time
+                time_until_timeout = base_timeout - waited_time
                 if (sender == (self.destination_ip, self.destination_port)):
                     received_seq_num = int.from_bytes(packet, byteorder='big', signed=False)
                     checked_all_messages = self.window.update_base(received_seq_num)
                     waited_time = 0
             except queue.Empty:
-                waited_time = 0
-                self._resend_all_packets()
+               time_until_timeout = 0

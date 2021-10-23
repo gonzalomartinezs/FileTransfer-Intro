@@ -31,22 +31,27 @@ class ReliableUDPSocket:
         connected = False
         base_timeout = ack_constants.BASE_TIMEOUT / 1000
         waited_time = 0
+        time_until_timeout = base_timeout
         self.sckt.sendto(shared_constants.SYN_TYPE_NUM.to_bytes(1, byteorder='big', signed=False) + self.base_seq_num.to_bytes(2, byteorder='big', signed=False), addr)
 
         while not connected:
-            time_until_timeout = base_timeout - waited_time
             before_recv_time = time.time()
             try:
+                if time_until_timeout <= 0:
+                    self.sckt.sendto(shared_constants.SYN_TYPE_NUM.to_bytes(1, byteorder='big', signed=False) + self.base_seq_num.to_bytes(2, byteorder='big', signed=False), addr)
+                    waited_time = 0
+                    time_until_timeout = base_timeout
                 self.sckt.settimeout(time_until_timeout)
                 packet, r_addr = self.sckt.recvfrom(shared_constants.CONST_MAX_BUFFER_SIZE)
                 waited_time += time.time() - before_recv_time
+                time_until_timeout = base_timeout - waited_time
                 if (r_addr[0] == addr[0]) and (r_addr[1] != addr[1]) and (packet[0] == shared_constants.OK_TYPE_NUM):
                     connected = True
                     connection_port = r_addr[1]
                     connection_seq_num = int.from_bytes(packet[1:3], byteorder='big', signed=False)
             except socket.timeout:
-                self.sckt.sendto(shared_constants.SYN_TYPE_NUM.to_bytes(1, byteorder='big', signed=False) + self.base_seq_num.to_bytes(2, byteorder='big', signed=False), addr)
-                waited_time = 0
+                time_until_timeout = 0
+                
 
         self.sckt.settimeout(None) #This removes the timeout we were setting
         self._initialize_connection(r_addr, connection_seq_num)
