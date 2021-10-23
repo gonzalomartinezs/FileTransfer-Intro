@@ -59,7 +59,7 @@ class Receiver:
                     self.expected_seq_num += 1
             else:
                 latest_ack_seq_num = (self.expected_seq_num - 1) if self.expected_seq_num != 0 else shared_constants.MAX_SEQ_NUM
-                ack_message = (ack_constants.ACK_TYPE_NUM).to_bytes(1, byteorder='big', signed=False) + (self.expected_seq_num-1).to_bytes(2, byteorder='big', signed=False)
+                ack_message = (ack_constants.ACK_TYPE_NUM).to_bytes(1, byteorder='big', signed=False) + (latest_ack_seq_num-1).to_bytes(2, byteorder='big', signed=False)
                 self.sender.sendto(ack_message, sender_addr)
             self.mutex.release()
             packet, sender_addr = self.receiver.get() #TODO agregar chequeo de ip y port del mensaje

@@ -95,22 +95,22 @@ class ReliableUDPSocket:
     def close(self): #TODO borrar del AcceptedConnections el addr asignado si es que el socket fue creado por un accept
         #TODO chequear si este socket es de tipo listen o no para setear la variable booleana para que corte y joinear con el thread
         if self.type == ReliableUDPSocketType.CLIENT:
-            self.keep_receiving_messages = False
             self.sender.close()
             self.receiver.close()
-            self.sckt.close()
+            self.keep_receiving_messages = False
             self.thread.join()
+            self.sckt.close()
         elif self.type == ReliableUDPSocketType.SERVER_HANDLER:
-            self.keep_receiving_messages = False
             self.sender.close()
             self.receiver.close()
-            self.sckt.close()
+            self.keep_receiving_messages = False
             self.thread.join()
+            self.sckt.close()
             self.accepted_connectons.remove_connection(self.peer_addr)
         elif self.type == ReliableUDPSocketType.SERVER_LISTENER:
             self.keep_listening = False
-            self.sckt.close()
             self.thread.join()
+            self.sckt.close()
         #If type == None then there is nothing to be done so no error is raised
 
 
@@ -150,6 +150,7 @@ class ReliableUDPSocket:
 
     #TODO hay que chequear que los mensajes nos vengan del tipo con el que entablamos la conexion
     def _receive_messages(self): #TODO tenemos que chequear que los mensajes esten bien armados en cada caso, por ej que el mensaje de tipo ACK no tenga mas de 2 bytes despues del byte del ACK (que son los 2 bytes del seq_num)
+        self.sckt.settimeout(0.5) #TODO ver si hay una alternativa a un timeout para el tema del close, pero creo que no hay mucha
         while (self.keep_receiving_messages):
             try:
                 packet, addr = self.sckt.recvfrom(shared_constants.CONST_MAX_BUFFER_SIZE)

@@ -22,6 +22,5 @@ class AtomicUDPSocket:
 
     def close(self):
         self.send_mutex.acquire()
-        self.sckt.shutdown(SHUT_RDWR)
         self.sckt.close()
         self.send_mutex.release()

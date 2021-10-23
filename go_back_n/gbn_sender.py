@@ -48,7 +48,6 @@ class GbnSender:
 
     def close(self):
         self.should_keep_running = False
-        self.receiver.put((None, None)) # This avoids possibly wainting forever in the receiver.get() call
         self.window.close()
         self.ack_thread.join()
 
@@ -72,8 +71,6 @@ class GbnSender:
                     waited_time = 0
                     time_until_timeout = base_timeout
                 packet, sender = self.receiver.get(timeout=time_until_timeout)
-                if packet == None: # If we received None because of an error, ignore it, otherwise it was because we need to close
-                    continue
                 waited_time += time.time() - before_recv_time
                 time_until_timeout = base_timeout - waited_time
                 if (sender == (self.destination_ip, self.destination_port)):
