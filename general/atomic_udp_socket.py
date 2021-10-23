@@ -3,11 +3,12 @@ from socket import SHUT_RDWR
 import threading
 
 class AtomicUDPSocket:
-    def __init__(self, port: int = None):
+    def __init__(self):
         self.send_mutex = threading.Lock()
         self.sckt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        if (port != None):
-            self.sckt.bind(('127.0.0.1', port))
+        
+    def bind(self, addr: tuple[str, int]):
+        self.sckt.bind(addr)
 
     def sendto(self, msg: bytes, addr: tuple[str, int]):
         self.send_mutex.acquire()

@@ -20,8 +20,8 @@ class ReliableUDPSocketType(Enum):
     SERVER_HANDLER = 3
 
 class ReliableUDPSocket:
-    def __init__(self, use_goback_n: bool = False, port: int = None):
-        self.sckt = AtomicUDPSocket(port)
+    def __init__(self, use_goback_n: bool = False):
+        self.sckt = AtomicUDPSocket()
         self.type = None
         self.accepted_connectons = None
         self.ack_queue = Queue()
@@ -33,7 +33,9 @@ class ReliableUDPSocket:
         self.keep_receiving_messages = True
         self.peer_addr = None
 
-        
+    def bind(self, addr: tuple[str, int]):
+        self.sckt.bind(addr)
+
     def connect(self, addr: tuple[str, int]): #TODO agregar un timeout total en el que deje de intentar
         if self.type == None:
             self.type = ReliableUDPSocketType.CLIENT
@@ -87,7 +89,7 @@ class ReliableUDPSocket:
     def send(self, msg: bytes):
         self.sender.send(msg)
 
-    def receive(self) -> bytes:
+    def recv(self) -> bytes:
         return self.receiver.receive()
 
     # IMPORTANT: DO NOT attempt to reuse the socket after executing close() on it!
