@@ -30,10 +30,8 @@ class ReliableUDPSocket:
         self.sender = None
         self.receiver = None
         self.thread = None
-        self.should_keep_going = True
+        self.keep_receiving_messages = True
         self.peer_addr = None
-        self.base_seq_num = random.randrange(0, shared_constants.MAX_SEQ_NUM)
-        #TODO: VAMOS A TENER QUE PUSHEAR UN MENSAJE DE QUE SE CERRO LA COLA PARA QUE DEJE DE INTENTAR LEER Y SE BLOQUEE
 
         
     def connect(self, addr: tuple[str, int]): #TODO agregar un timeout total en el que deje de intentar
@@ -43,16 +41,17 @@ class ReliableUDPSocket:
             raise SocketAlreadySetupError()
 
         connected = False
+        base_seq_num = random.randrange(0, shared_constants.MAX_SEQ_NUM)
         base_timeout = ack_constants.BASE_TIMEOUT / 1000
         waited_time = 0
         time_until_timeout = base_timeout
-        self.sckt.sendto(shared_constants.SYN_TYPE_NUM.to_bytes(1, byteorder='big', signed=False) + self.base_seq_num.to_bytes(2, byteorder='big', signed=False), addr)
+        self.sckt.sendto(shared_constants.SYN_TYPE_NUM.to_bytes(1, byteorder='big', signed=False) + base_seq_num.to_bytes(2, byteorder='big', signed=False), addr)
 
         while not connected:
             before_recv_time = time.time()
             try:
                 if time_until_timeout <= 0:
-                    self.sckt.sendto(shared_constants.SYN_TYPE_NUM.to_bytes(1, byteorder='big', signed=False) + self.base_seq_num.to_bytes(2, byteorder='big', signed=False), addr)
+                    self.sckt.sendto(shared_constants.SYN_TYPE_NUM.to_bytes(1, byteorder='big', signed=False) + base_seq_num.to_bytes(2, byteorder='big', signed=False), addr)
                     waited_time = 0
                     time_until_timeout = base_timeout
                 self.sckt.settimeout(time_until_timeout)
@@ -68,7 +67,7 @@ class ReliableUDPSocket:
                 
 
         self.sckt.settimeout(None) #This removes the timeout we were setting
-        self._initialize_connection(r_addr, connection_seq_num)
+        self._initialize_connection(r_addr, base_seq_num, connection_seq_num)
 
 
     def listen(self, max_connections: int):
@@ -96,30 +95,34 @@ class ReliableUDPSocket:
     def close(self): #TODO borrar del AcceptedConnections el addr asignado si es que el socket fue creado por un accept
         #TODO chequear si este socket es de tipo listen o no para setear la variable booleana para que corte y joinear con el thread
         if self.type == ReliableUDPSocketType.CLIENT:
+            self.keep_receiving_messages = False
             self.sender.close()
             self.receiver.close()
             self.sckt.close()
+            self.thread.join()
         elif self.type == ReliableUDPSocketType.SERVER_HANDLER:
+            self.keep_receiving_messages = False
             self.sender.close()
             self.receiver.close()
             self.sckt.close()
+            self.thread.join()
             self.accepted_connectons.remove_connection(self.peer_addr)
         elif self.type == ReliableUDPSocketType.SERVER_LISTENER:
-            self.keep_listening = False #TODO tengo que evitar que se quede para siempre escuchando y no le de bola a mi close
-            self.thread.join()
+            self.keep_listening = False
             self.sckt.close()
+            self.thread.join()
         #If type == None then there is nothing to be done so no error is raised
 
 
 
     #PRIVATE
-    def _initialize_connection(self, dest_addr: tuple[str, int], connection_seq_num: int): #TODO el base_seq_num en realidad tengo que cambiarlo en el accept todo el tiempo, sino todos los sockets tienen el mismo!
+    def _initialize_connection(self, dest_addr: tuple[str, int], base_seq_num: int, connection_seq_num: int): #TODO el base_seq_num en realidad tengo que cambiarlo en el accept todo el tiempo, sino todos los sockets tienen el mismo!
         self.peer_addr = dest_addr
         self.receiver = Receiver(self.sckt, self.msg_queue, connection_seq_num)
         if (self.use_goback_n):
-            self.sender = GbnSender(self.sckt, self.ack_queue, 10, self.base_seq_num) #TODO volar el 10 hardcodeado del window_size
+            self.sender = GbnSender(self.sckt, self.ack_queue, 10, base_seq_num) #TODO volar el 10 hardcodeado del window_size
         else:
-            self.sender = StopAndWaitSender(self.sckt, self.ack_queue, self.base_seq_num)
+            self.sender = StopAndWaitSender(self.sckt, self.ack_queue, base_seq_num)
         self.sender.set_destination(dest_addr)
         self.thread = threading.Thread(target = self._receive_messages, daemon=True)
         self.thread.start()
@@ -127,29 +130,36 @@ class ReliableUDPSocket:
 
     def _listen_for_connections(self):
         while self.keep_listening:
-            packet, addr = self.sckt.recvfrom(shared_constants.CONST_MAX_BUFFER_SIZE)
-            if self.new_connections_queue.full(): # We ignore the connection request if the queue is full
-                continue
-            if (packet[0] == shared_constants.SYN_TYPE_NUM) and (not addr in self.accepted_connectons):
-                connection_seq_num = int.from_bytes(packet[1:3], byteorder='big', signed=False)
-                n_sckt = ReliableUDPSocket(self.use_goback_n)
-                n_sckt.accepted_connectons = self.accepted_connectons
-                n_sckt.type = ReliableUDPSocketType.SERVER_HANDLER
-                n_sckt._initialize_connection(addr, connection_seq_num)
-                n_sckt.sender.send(shared_constants.OK_TYPE_NUM.to_bytes(1, byteorder='big', signed=False) + self.base_seq_num.to_bytes(2, byteorder='big', signed=False), add_metadata=False)
-                self.accepted_connectons.add_connection(addr)
-                self.new_connections_queue.put(n_sckt)
+            try:
+                packet, addr = self.sckt.recvfrom(shared_constants.CONST_MAX_BUFFER_SIZE)
+                if self.new_connections_queue.full(): # We ignore the connection request if the queue is full
+                    continue
+                if (packet[0] == shared_constants.SYN_TYPE_NUM) and (not addr in self.accepted_connectons):
+                    connection_seq_num = int.from_bytes(packet[1:3], byteorder='big', signed=False)
+                    n_sckt = ReliableUDPSocket(self.use_goback_n)
+                    base_seq_num = random.randrange(0, shared_constants.MAX_SEQ_NUM)
+                    n_sckt.accepted_connectons = self.accepted_connectons
+                    n_sckt.type = ReliableUDPSocketType.SERVER_HANDLER
+                    n_sckt._initialize_connection(addr, base_seq_num, connection_seq_num)
+                    n_sckt.sender.send(shared_constants.OK_TYPE_NUM.to_bytes(1, byteorder='big', signed=False) + base_seq_num.to_bytes(2, byteorder='big', signed=False), add_metadata=False)
+                    self.accepted_connectons.add_connection(addr)
+                    self.new_connections_queue.put(n_sckt)
+            except:
+                pass
 
 
     #TODO hay que chequear que los mensajes nos vengan del tipo con el que entablamos la conexion
     def _receive_messages(self): #TODO tenemos que chequear que los mensajes esten bien armados en cada caso, por ej que el mensaje de tipo ACK no tenga mas de 2 bytes despues del byte del ACK (que son los 2 bytes del seq_num)
-        while (self.should_keep_going):
-            packet, addr = self.sckt.recvfrom(shared_constants.CONST_MAX_BUFFER_SIZE)
-            packet_type = packet[shared_constants.MSG_TYPE_INDEX]
-            packet = packet[shared_constants.MSG_TYPE_INDEX+1:]
-            if packet_type == ack_constants.ACK_TYPE_NUM:
-                self.ack_queue.put((packet, addr))
-            elif packet_type == shared_constants.MSG_TYPE_NUM:
-                self.msg_queue.put((packet, addr))
-            elif packet_type == shared_constants.OK_TYPE_NUM:
-                self.msg_queue.put((packet, addr))
+        while (self.keep_receiving_messages):
+            try:
+                packet, addr = self.sckt.recvfrom(shared_constants.CONST_MAX_BUFFER_SIZE)
+                packet_type = packet[shared_constants.MSG_TYPE_INDEX]
+                packet = packet[shared_constants.MSG_TYPE_INDEX+1:]
+                if packet_type == ack_constants.ACK_TYPE_NUM:
+                    self.ack_queue.put((packet, addr))
+                elif packet_type == shared_constants.MSG_TYPE_NUM:
+                    self.msg_queue.put((packet, addr))
+                elif packet_type == shared_constants.OK_TYPE_NUM:
+                    self.msg_queue.put((packet, addr))
+            except:
+                pass

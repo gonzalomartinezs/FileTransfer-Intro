@@ -41,11 +41,13 @@ class Receiver:
 
     def close(self):
         self.should_keep_running = False
+        self.receiver.put((None, None)) #This avoids getting blocked in the receiver.get() method call
+        self.ack_thread.join()
 
     # PRIVATE
     def _receive_packets(self):
+        packet, sender_addr = self.receiver.get() #TODO agregar chequeo de ip y port del mensaje
         while (self.should_keep_running):
-            packet, sender_addr = self.receiver.get() #TODO agregar chequeo de ip y port del mensaje
             packet_seq_number = int.from_bytes(packet[:shared_constants.SEQ_NUM_SIZE], byteorder='big', signed=False)
             self.mutex.acquire()
             if (packet_seq_number == self.expected_seq_num):
@@ -60,3 +62,4 @@ class Receiver:
                 ack_message = (ack_constants.ACK_TYPE_NUM).to_bytes(1, byteorder='big', signed=False) + (self.expected_seq_num-1).to_bytes(2, byteorder='big', signed=False)
                 self.sender.sendto(ack_message, sender_addr)
             self.mutex.release()
+            packet, sender_addr = self.receiver.get() #TODO agregar chequeo de ip y port del mensaje
