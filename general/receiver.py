@@ -10,17 +10,17 @@ class ClosedSocketError(Exception):
     pass
 
 class Receiver:
-    def __init__(self, sender: AtomicUDPSocket, receiver: Queue, expected_seq_num: int):
+    def __init__(self, sender: AtomicUDPSocket, receiver: Queue):
         self.sender = sender
         self.receiver = receiver
-        self.expected_seq_num = expected_seq_num
+        self.source_ip, self.source_port = None, None
+        self.expected_seq_num = None
         self.received_packets_queue: list[bytes] = []
         self.mutex = threading.Lock()
         self.cv = threading.Condition(self.mutex)
         self.should_keep_running = True
         self.ack_thread = threading.Thread(target=self._receive_packets, daemon=True)
         self.ack_thread.start()
-        #TODO: AGREGAR CHEQUEO DE IP
 
     def receive(self) -> bytes:
         packet = None
@@ -36,13 +36,17 @@ class Receiver:
 
         return packet
 
+    def set_source(self, source_ip: str, source_port: int):
+        self.source_ip, self.source_port = source_ip, source_port
+
     def close(self):
         self.should_keep_running = False
 
     # PRIVATE
     def _receive_packets(self):
         while (self.should_keep_running):
-            packet, sender_addr = self.receiver.get() #TODO hay que chequear que los mensajes nos vengan del tipo con el que entablamos la conexion
+            packet, sender_addr = self.receiver.get()
+            if (self.source_ip == None or self.source_port == None) and (packet[0] == ) #TODO
             packet_seq_number = int.from_bytes(packet[:shared_constants.SEQ_NUM_SIZE], byteorder='big', signed=False)
             self.mutex.acquire()
             if (packet_seq_number == self.expected_seq_num):
@@ -53,7 +57,7 @@ class Receiver:
                     self.sender.sendto(ack_message, sender_addr)
                     self.expected_seq_num += 1
             else:
-                #TODO cuando hago -1 tengo que chequear si soy 0 porque ahi tengo que ir a 2**16 - 1
+                latest_ack_seq_num = (self.expected_seq_num - 1) if self.expected_seq_num != 0 else shared_constants.MAX_SEQ_NUM
                 ack_message = (ack_constants.ACK_TYPE_NUM).to_bytes(1, byteorder='big', signed=False) + (self.expected_seq_num-1).to_bytes(2, byteorder='big', signed=False)
                 self.sender.sendto(ack_message, sender_addr)
             self.mutex.release()

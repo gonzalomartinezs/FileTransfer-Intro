@@ -23,8 +23,11 @@ class ReliableUDPSocket:
         else:
             self.sender = StopAndWaitSender(self.sckt, self.ack_queue)
 
-    def set_destination(self, destination_ip: str, destination_port: int):
-            self.sender.set_destination(destination_ip, destination_port)
+    def connect(self, destination_ip: str, destination_port: int):
+        self.sender.set_destination(destination_ip, destination_port)
+        self.receiver.set_source(destination_ip, destination_port)
+        self.sender.send(shared_constants.SYN_TYPE_NUM.to_bytes(1, byteorder='big', signed=False))
+        self.receiver.receive()
 
     def send(self, msg: bytes):
         self.sender.send(msg)
@@ -36,6 +39,7 @@ class ReliableUDPSocket:
         self.sender.close()
 
     #PRIVATE
+    #TODO hay que chequear que los mensajes nos vengan del tipo con el que entablamos la conexion
     def _receive_messages(self): #TODO tenemos que chequear que los mensajes esten bien armados en cada caso, por ej que el mensaje de tipo ACK no tenga mas de 2 bytes despues del byte del ACK (que son los 2 bytes del seq_num)
         while (self.should_keep_going):
             packet, addr = self.sckt.recvfrom(shared_constants.CONST_MAX_BUFFER_SIZE)

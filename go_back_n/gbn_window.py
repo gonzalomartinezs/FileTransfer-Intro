@@ -3,13 +3,11 @@ import threading
 import socket
 import general.shared_constants as shared_constants
 
-CONST_MAX_SEQ_NUM = 2**16 - 1
-
 class GbnWindow:
     def __init__(self, window_size: int):
         self.mutex = threading.Lock()
         self.window_size = window_size
-        self.base = random.randrange(0, CONST_MAX_SEQ_NUM)
+        self.base = random.randrange(0, shared_constants.MAX_SEQ_NUM)
         self.next_seq_num = self.base
         self.packet_buffer = []
         self.closed = False
@@ -62,7 +60,7 @@ class GbnWindow:
         if (is_sequential_case or is_looping_case):
             del self.packet_buffer[:self._get_packets_between(received_seq_number)]
             self.base = received_seq_number + 1
-            if (self.base > CONST_MAX_SEQ_NUM): #This is only for the edge case where received_seq_number == CONST_MAX_SEQ_NUM
+            if (self.base > shared_constants.MAX_SEQ_NUM): #This is only for the edge case where received_seq_number == CONST_MAX_SEQ_NUM
                 self.base = 0
             self.cv.notify_all()
         is_buffer_empty = len(self.packet_buffer) == 0
@@ -96,7 +94,7 @@ class GbnWindow:
         acknowledged_packets = 0
         aux = num - self.base
         if (aux < 0):
-            acknowledged_packets = ((CONST_MAX_SEQ_NUM + 1) - self.base) + (num + 1)
+            acknowledged_packets = ((shared_constants.MAX_SEQ_NUM + 1) - self.base) + (num + 1)
         else:
             acknowledged_packets = aux + 1
 
@@ -104,5 +102,5 @@ class GbnWindow:
 
     def _add_to_seq_num(self):
         self.next_seq_num += 1
-        if (self.next_seq_num > CONST_MAX_SEQ_NUM):
+        if (self.next_seq_num > shared_constants.MAX_SEQ_NUM):
             self.next_seq_num = 0
