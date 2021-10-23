@@ -60,7 +60,6 @@ class ReliableUDPSocket:
                 time_until_timeout = base_timeout - waited_time
                 if (r_addr[0] == addr[0]) and (r_addr[1] != addr[1]) and (packet[0] == shared_constants.OK_TYPE_NUM):
                     connected = True
-                    connection_port = r_addr[1]
                     connection_seq_num = int.from_bytes(packet[1:3], byteorder='big', signed=False)
             except socket.timeout:
                 time_until_timeout = 0
@@ -116,7 +115,7 @@ class ReliableUDPSocket:
 
 
     #PRIVATE
-    def _initialize_connection(self, dest_addr: tuple[str, int], base_seq_num: int, connection_seq_num: int): #TODO el base_seq_num en realidad tengo que cambiarlo en el accept todo el tiempo, sino todos los sockets tienen el mismo!
+    def _initialize_connection(self, dest_addr: tuple[str, int], base_seq_num: int, connection_seq_num: int):
         self.peer_addr = dest_addr
         self.receiver = Receiver(self.sckt, self.msg_queue, connection_seq_num)
         if (self.use_goback_n):
@@ -129,6 +128,7 @@ class ReliableUDPSocket:
 
 
     def _listen_for_connections(self):
+        self.sckt.settimeout(0.5) #TODO ver si hay una alternativa a un timeout para el tema del close, pero creo que no hay mucha
         while self.keep_listening:
             try:
                 packet, addr = self.sckt.recvfrom(shared_constants.CONST_MAX_BUFFER_SIZE)
