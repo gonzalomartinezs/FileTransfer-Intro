@@ -20,27 +20,27 @@ class CloseSenderError(Exception):
     pass
 
 class GbnSender:
-    def __init__(self, sender: AtomicUDPSocket, receiver: Queue, window_size: int):
+    def __init__(self, sender: AtomicUDPSocket, receiver: Queue, window_size: int, base_seq_num: int):
         self.destination_ip = None
         self.destination_port = None
-        self.window = GbnWindow(window_size)
+        self.window = GbnWindow(window_size, base_seq_num)
         self.sender = sender
         self.receiver = receiver
         self.should_keep_running = True
         self.ack_thread = threading.Thread(target=self._confirm_packets, daemon=True)
         self.ack_thread.start()
 
-    def set_destination(self, destination_ip: str, destination_port: int):
-        self.destination_ip = destination_ip
-        self.destination_port = destination_port
+    def set_destination(self, addr: tuple[str, int]):
+        self.destination_ip = addr[0]
+        self.destination_port = addr[1]
 
-    def send(self, message: bytes):
+    def send(self, message: bytes, add_metadata: bool = True):
         if (self.should_keep_running):
             if (self.destination_ip == None) or (self.destination_port == None):
                 raise InvalidDestinationError()
 
             if ((len(message) + shared_constants.METADATA_SIZE) <= shared_constants.CONST_MAX_BUFFER_SIZE):
-                packet = self.window.add_packet(message)
+                packet = self.window.add_packet(message, add_metadata)
                 self.sender.sendto(packet, (self.destination_ip, self.destination_port))
             else:
                 raise InvalidMessageSize()

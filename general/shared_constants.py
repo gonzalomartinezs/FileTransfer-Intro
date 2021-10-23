@@ -8,3 +8,4 @@ SEQ_NUM_SIZE = 2
 METADATA_SIZE = MSG_TYPE_SIZE + SEQ_NUM_SIZE
 MAX_SEQ_NUM = 2**16 - 1
 SYN_TYPE_NUM = 50
+OK_TYPE_NUM = 47 # This indicates an accepted SYN request

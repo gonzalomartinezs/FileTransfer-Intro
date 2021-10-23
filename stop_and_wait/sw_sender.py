@@ -17,17 +17,16 @@ class CloseSenderError(Exception):
     pass
 
 class StopAndWaitSender:
-    def __init__(self, socket: AtomicUDPSocket):
+    def __init__(self, socket: AtomicUDPSocket, base_seq_num: int):
         self.destination_ip = None
         self.destination_port = None
-        #self.sckt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.sckt = socket
         self.should_keep_running = True
-        self.seq_num = 0 #Should be random
+        self.seq_num = base_seq_num
         
-    def set_destination(self, destination_ip: str, destination_port: int):
-        self.destination_ip = destination_ip
-        self.destination_port = destination_port
+    def set_destination(self, addr: tuple[str, int]):
+        self.destination_ip = addr[0]
+        self.destination_port = addr[1]
 
     def send(self, message: bytes):
         if (self.should_keep_running):
@@ -78,4 +77,3 @@ class StopAndWaitSender:
                 waited_time = 0
                 curr_timeout = ack_constants.BASE_TIMEOUT / 1000
                 self.sckt.settimeout(curr_timeout) 
-                continue

@@ -16,6 +16,9 @@ class AtomicUDPSocket:
     def recvfrom(self, buff_size: int) -> tuple[bytes, tuple[str, int]]:
         return self.sckt.recvfrom(buff_size)
 
+    def settimeout(self, timeout: float):
+        self.sckt.settimeout(timeout)
+
     def close(self):
         self.send_mutex.acquire()
         self.sckt.close()

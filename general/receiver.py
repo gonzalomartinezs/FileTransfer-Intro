@@ -10,11 +10,11 @@ class ClosedSocketError(Exception):
     pass
 
 class Receiver:
-    def __init__(self, sender: AtomicUDPSocket, receiver: Queue):
+    def __init__(self, sender: AtomicUDPSocket, receiver: Queue, expected_seq_num: int):
         self.sender = sender
         self.receiver = receiver
         self.source_ip, self.source_port = None, None
-        self.expected_seq_num = None
+        self.expected_seq_num = expected_seq_num
         self.received_packets_queue: list[bytes] = []
         self.mutex = threading.Lock()
         self.cv = threading.Condition(self.mutex)
@@ -45,8 +45,7 @@ class Receiver:
     # PRIVATE
     def _receive_packets(self):
         while (self.should_keep_running):
-            packet, sender_addr = self.receiver.get()
-            if (self.source_ip == None or self.source_port == None) and (packet[0] == ) #TODO
+            packet, sender_addr = self.receiver.get() #TODO agregar chequeo de ip y port del mensaje
             packet_seq_number = int.from_bytes(packet[:shared_constants.SEQ_NUM_SIZE], byteorder='big', signed=False)
             self.mutex.acquire()
             if (packet_seq_number == self.expected_seq_num):

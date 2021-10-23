@@ -4,20 +4,21 @@ import socket
 import general.shared_constants as shared_constants
 
 class GbnWindow:
-    def __init__(self, window_size: int):
+    def __init__(self, window_size: int, base_seq_num: int):
         self.mutex = threading.Lock()
         self.window_size = window_size
-        self.base = random.randrange(0, shared_constants.MAX_SEQ_NUM)
+        self.base = base_seq_num
         self.next_seq_num = self.base
         self.packet_buffer = []
         self.closed = False
         self.cv = threading.Condition(self.mutex)
 
-    def add_packet(self, packet: bytes):
+    def add_packet(self, packet: bytes, add_metadata: bool):
         self.mutex.acquire()
         while self._is_full():
             self.cv.wait()
-        packet = (shared_constants.MSG_TYPE_NUM).to_bytes(1, byteorder = 'big') + (self.next_seq_num).to_bytes(2, byteorder='big') + packet
+        if add_metadata:
+            packet = (shared_constants.MSG_TYPE_NUM).to_bytes(1, byteorder = 'big') + (self.next_seq_num).to_bytes(2, byteorder='big') + packet
         self.packet_buffer.append(packet)
         self._add_to_seq_num()
         #TODO: VER SI AGREGAMOS CHEQUEO DE SI HAY QUE HACER EL NOTIFY
