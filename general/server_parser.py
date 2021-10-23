@@ -1,7 +1,9 @@
 import argparse
-from shared_constants import *
+from general.shared_constants import *
 
 
+# Retorna un objeto contenedor con los atributos command, host, port, storage,
+# verbose y quiet
 def parse_arguments():
     # Se crea el parser
     sv_parser = argparse.ArgumentParser(

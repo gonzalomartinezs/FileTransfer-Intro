@@ -1,5 +1,5 @@
 import argparse
-from shared_constants import *
+from general.shared_constants import *
 
 
 def __add_optional_arguments(parser):
@@ -10,6 +10,8 @@ def __add_optional_arguments(parser):
                        help="decrease output verbosity")
 
 
+# Retorna un objeto contenedor con los atributos command, host, port,
+# source/dest, name, verbose y quiet.
 def parse_arguments():
     # Se crea el parser
     cl_parser = argparse.ArgumentParser(description="Client-side application")
@@ -36,16 +38,9 @@ def parse_arguments():
     download_parser.add_argument("name", help="file name")
 
     # Argumentos opcionales (llevan '-' adelante)
-    __add_optional_arguments(upload_parser)
-    __add_optional_arguments(download_parser)
+    __add_optional_arguments(cl_parser)
 
-    # Pasa los argumentos introducidos a un objeto contenedor
-    if cl_parser.parse_args().command == "upload-file":
-        args = upload_parser.parse_args()
-    elif cl_parser.parse_args().command == "download-file":
-        args = download_parser.parse_args()
-    else:
-        cl_parser.error("Uknown command")
+    args = cl_parser.parse_args()
 
     if args.port < CONST_MIN_PORT or args.port > CONST_MAX_PORT:
         cl_parser.error("Port value must be in between [1024-65535]")
