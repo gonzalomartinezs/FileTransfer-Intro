@@ -5,14 +5,24 @@ from general.receiver import Receiver
 from general.atomic_udp_socket import AtomicUDPSocket
 from general.accepted_connections import AcceptedConnections
 from queue import Queue
+from enum import Enum
 import threading
 import random
 import time
 import socket
 
+class SocketAlreadySetupError(Exception):
+    pass
+
+class ReliableUDPSocketType(Enum):
+    CLIENT = 1
+    SERVER_LISTENER = 2
+    SERVER_HANDLER = 3
+
 class ReliableUDPSocket:
     def __init__(self, use_goback_n: bool = False, port: int = None):
         self.sckt = AtomicUDPSocket(port)
+        self.type = None
         self.accepted_connectons = None
         self.ack_queue = Queue()
         self.msg_queue = Queue()
@@ -26,8 +36,12 @@ class ReliableUDPSocket:
         #TODO: VAMOS A TENER QUE PUSHEAR UN MENSAJE DE QUE SE CERRO LA COLA PARA QUE DEJE DE INTENTAR LEER Y SE BLOQUEE
 
         
-    #TODO BUG no se por que a veces el timeout se me hace negativo, VER ESO
     def connect(self, addr: tuple[str, int]): #TODO agregar un timeout total en el que deje de intentar
+        if self.type == None:
+            self.type = ReliableUDPSocketType.CLIENT
+        else:
+            raise SocketAlreadySetupError()
+
         connected = False
         base_timeout = ack_constants.BASE_TIMEOUT / 1000
         waited_time = 0
@@ -58,6 +72,11 @@ class ReliableUDPSocket:
 
 
     def listen(self, max_connections: int):
+        if self.type == None:
+            self.type = ReliableUDPSocketType.SERVER_LISTENER
+        else:
+            raise SocketAlreadySetupError()
+
         self.accepted_connectons = AcceptedConnections()
         self.keep_listening = True
         self.new_connections_queue = Queue(max_connections)
@@ -73,13 +92,23 @@ class ReliableUDPSocket:
     def receive(self) -> bytes:
         return self.receiver.receive()
 
+    # IMPORTANT: DO NOT attempt to reuse the socket after executing close() on it!
     def close(self): #TODO borrar del AcceptedConnections el addr asignado si es que el socket fue creado por un accept
         #TODO chequear si este socket es de tipo listen o no para setear la variable booleana para que corte y joinear con el thread
-        self.sender.close()
-        self.receiver.close()
-        self.sckt.close()
-        if self.accepted_connectons != None: #This indicates that this socket was created by an accepter
+        if self.type == ReliableUDPSocketType.CLIENT:
+            self.sender.close()
+            self.receiver.close()
+            self.sckt.close()
+        elif self.type == ReliableUDPSocketType.SERVER_HANDLER:
+            self.sender.close()
+            self.receiver.close()
+            self.sckt.close()
             self.accepted_connectons.remove_connection(self.peer_addr)
+        elif self.type == ReliableUDPSocketType.SERVER_LISTENER:
+            self.keep_listening = False #TODO tengo que evitar que se quede para siempre escuchando y no le de bola a mi close
+            self.thread.join()
+            self.sckt.close()
+        #If type == None then there is nothing to be done so no error is raised
 
 
 
@@ -95,6 +124,7 @@ class ReliableUDPSocket:
         self.thread = threading.Thread(target = self._receive_messages, daemon=True)
         self.thread.start()
 
+
     def _listen_for_connections(self):
         while self.keep_listening:
             packet, addr = self.sckt.recvfrom(shared_constants.CONST_MAX_BUFFER_SIZE)
@@ -104,10 +134,12 @@ class ReliableUDPSocket:
                 connection_seq_num = int.from_bytes(packet[1:3], byteorder='big', signed=False)
                 n_sckt = ReliableUDPSocket(self.use_goback_n)
                 n_sckt.accepted_connectons = self.accepted_connectons
+                n_sckt.type = ReliableUDPSocketType.SERVER_HANDLER
                 n_sckt._initialize_connection(addr, connection_seq_num)
                 n_sckt.sender.send(shared_constants.OK_TYPE_NUM.to_bytes(1, byteorder='big', signed=False) + self.base_seq_num.to_bytes(2, byteorder='big', signed=False), add_metadata=False)
                 self.accepted_connectons.add_connection(addr)
                 self.new_connections_queue.put(n_sckt)
+
 
     #TODO hay que chequear que los mensajes nos vengan del tipo con el que entablamos la conexion
     def _receive_messages(self): #TODO tenemos que chequear que los mensajes esten bien armados en cada caso, por ej que el mensaje de tipo ACK no tenga mas de 2 bytes despues del byte del ACK (que son los 2 bytes del seq_num)
