@@ -15,7 +15,7 @@ class ReliableUDPSocket:
         self.sckt = AtomicUDPSocket(port)
         self.accepted_connectons = None
         self.ack_queue = Queue()
-        self.msg_queue = Queue()#TODO: TIENE QUE GUARDAR TUPLA DE ADDRESS Y MENSAJE
+        self.msg_queue = Queue()
         self.use_goback_n = use_goback_n
         self.sender = None
         self.receiver = None
@@ -36,10 +36,8 @@ class ReliableUDPSocket:
             time_until_timeout = base_timeout - waited_time
             before_recv_time = time.time()
             try:
-                print(time_until_timeout)
                 self.sckt.settimeout(time_until_timeout)
                 packet, r_addr = self.sckt.recvfrom(shared_constants.CONST_MAX_BUFFER_SIZE)
-                print(packet)
                 waited_time += time.time() - before_recv_time
                 if (r_addr[0] == addr[0]) and (r_addr[1] != addr[1]) and (packet[0] == shared_constants.OK_TYPE_NUM):
                     connected = True
@@ -50,7 +48,7 @@ class ReliableUDPSocket:
                 waited_time = 0
 
         self.sckt.settimeout(None) #This removes the timeout
-        self._initialize_connection(addr, connection_seq_num)
+        self._initialize_connection(r_addr, connection_seq_num)
 
 
     def listen(self): #TODO, por ahora solo la uso para setear el accepted_connections
