@@ -1,5 +1,6 @@
 import argparse
 from general.shared_constants import *
+from general.file_finder import dir_exists
 
 
 def __add_optional_arguments(parser):
@@ -44,5 +45,10 @@ def parse_arguments():
 
     if args.port < CONST_MIN_PORT or args.port > CONST_MAX_PORT:
         cl_parser.error("Port value must be in between [1024-65535]")
+
+    if args.command == "upload-file" and not dir_exists(args.source):
+        cl_parser.error("Invalid source path.")
+    elif args.command == "download-file" and not dir_exists(args.dest):
+        cl_parser.error("Invalid dest path.")
 
     return args

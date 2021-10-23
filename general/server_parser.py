@@ -1,5 +1,6 @@
 import argparse
 from general.shared_constants import *
+from general.file_finder import dir_exists
 
 
 # Retorna un objeto contenedor con los atributos command, host, port, storage,
@@ -28,5 +29,8 @@ def parse_arguments():
 
     if args.port < CONST_MIN_PORT or args.port > CONST_MAX_PORT:
         sv_parser.error("Port value must be in between [1024-65535]")
+
+    if not dir_exists(args.storage):
+        sv_parser.error("Invalid storage path.")
 
     return args
