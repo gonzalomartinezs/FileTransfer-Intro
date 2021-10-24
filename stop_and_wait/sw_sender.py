@@ -23,7 +23,7 @@ class StopAndWaitSender:
 
     def send(self, message: bytes):
         if (self.should_keep_running):
-            if (len(message) + ack_constants.SEQ_NUM_SIZE <= shared_constants.CONST_MAX_BUFFER_SIZE): #-2 por los 2 bytes del seq num
+            if (len(message) + ack_constants.SEQ_NUM_SIZE <= shared_constants.MAX_BUFFER_SIZE):
                 self._try_send(message)
             else:
                 raise InvalidMessageSize()
@@ -36,7 +36,7 @@ class StopAndWaitSender:
     #PRIVATE
 
     def _try_send(self, message: bytes):
-        message = self.seq_num.to_bytes(ack_constants.SEQ_NUM_SIZE,"big") + message #Build message with sequence number
+        message = self.seq_num.to_bytes(2, "big") + message #Build message with sequence number
         self.sckt.send(message) #Send message
 
         #Setup timeout

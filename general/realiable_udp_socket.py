@@ -57,12 +57,12 @@ class ReliableUDPSocket:
                     waited_time = 0
                     time_until_timeout = base_timeout
                 self.sckt.settimeout(time_until_timeout)
-                packet, r_addr = self.sckt.recvfrom(shared_constants.CONST_MAX_BUFFER_SIZE)
+                packet, r_addr = self.sckt.recvfrom(shared_constants.MAX_BUFFER_SIZE)
                 waited_time += time.time() - before_recv_time
                 time_until_timeout = base_timeout - waited_time
                 if (r_addr[0] == addr[0]) and (r_addr[1] != addr[1]) and (packet[0] == shared_constants.OK_TYPE_NUM):
                     connected = True
-                    connection_seq_num = int.from_bytes(packet[1:3], byteorder='big', signed=False)
+                    connection_seq_num = int.from_bytes(packet[1:], byteorder='big', signed=False)
             except socket.timeout:
                 time_until_timeout = 0
                 
@@ -132,11 +132,11 @@ class ReliableUDPSocket:
         self.sckt.settimeout(0.5) #TODO ver si hay una alternativa a un timeout para el tema del close, pero creo que no hay mucha
         while self.keep_listening:
             try:
-                packet, addr = self.sckt.recvfrom(shared_constants.CONST_MAX_BUFFER_SIZE)
+                packet, addr = self.sckt.recvfrom(shared_constants.MAX_BUFFER_SIZE)
                 if self.new_connections_queue.full(): # We ignore the connection request if the queue is full
                     continue
                 if (packet[0] == shared_constants.SYN_TYPE_NUM) and (not addr in self.accepted_connectons):
-                    connection_seq_num = int.from_bytes(packet[1:3], byteorder='big', signed=False)
+                    connection_seq_num = int.from_bytes(packet[1:], byteorder='big', signed=False)
                     n_sckt = ReliableUDPSocket(self.use_goback_n)
                     base_seq_num = random.randrange(0, shared_constants.MAX_SEQ_NUM)
                     n_sckt.accepted_connectons = self.accepted_connectons
@@ -153,9 +153,9 @@ class ReliableUDPSocket:
         self.sckt.settimeout(0.5) #TODO ver si hay una alternativa a un timeout para el tema del close, pero creo que no hay mucha
         while (self.keep_receiving_messages):
             try:
-                packet = self.sckt.recv(shared_constants.CONST_MAX_BUFFER_SIZE)
-                packet_type = packet[shared_constants.MSG_TYPE_INDEX]
-                packet = packet[shared_constants.MSG_TYPE_INDEX+1:]
+                packet = self.sckt.recv(shared_constants.MAX_BUFFER_SIZE)
+                packet_type = packet[0]
+                packet = packet[1:] # We remove the packet type before redirecting it
                 if packet_type == ack_constants.ACK_TYPE_NUM:
                     self.ack_queue.put(packet)
                 elif packet_type == shared_constants.MSG_TYPE_NUM:

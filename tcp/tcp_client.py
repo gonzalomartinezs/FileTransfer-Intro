@@ -12,7 +12,7 @@ def upload_file(arguments, cl_socket):
     msg = "0," + arguments.name
     cl_socket.send(msg.encode())
 
-    response = int(cl_socket.recv(constants.CONST_MAX_BUFFER_SIZE).decode())
+    response = int(cl_socket.recv(constants.MAX_BUFFER_SIZE).decode())
     if response is 1:
         print("The file already exists on the server.")
         option = "-1"
@@ -34,7 +34,7 @@ def upload_file(arguments, cl_socket):
         while continue_reading:
             try:
                 bytes_read = file.read_next_section(constants.
-                                                    CONST_MAX_BUFFER_SIZE)
+                                                    MAX_BUFFER_SIZE)
                 cl_socket.send(bytes_read)
             except EOFError:
                 continue_reading = False
@@ -50,7 +50,7 @@ def download_file(arguments, cl_socket):
     msg = "1," + arguments.name
     cl_socket.send(msg.encode())
 
-    response = int(cl_socket.recv(constants.CONST_MAX_BUFFER_SIZE).decode())
+    response = int(cl_socket.recv(constants.MAX_BUFFER_SIZE).decode())
     if response is 1:
         print("The file does not exist on the server.")
         return
@@ -65,11 +65,11 @@ def download_file(arguments, cl_socket):
 
     filepath = os.path.join(arguments.dest, arguments.name)
     file = open(filepath, "wb")
-    received = cl_socket.recv(constants.CONST_MAX_BUFFER_SIZE)
+    received = cl_socket.recv(constants.MAX_BUFFER_SIZE)
 
     while received != b'':
         file.write(received)
-        received = cl_socket.recv(constants.CONST_MAX_BUFFER_SIZE)
+        received = cl_socket.recv(constants.MAX_BUFFER_SIZE)
 
     file.close()
 

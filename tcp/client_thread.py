@@ -16,7 +16,7 @@ class ClientThread(threading.Thread):
 
     def run(self):
         while self.keep_running:
-            received = self.peer.recv(constants.CONST_MAX_BUFFER_SIZE)
+            received = self.peer.recv(constants.MAX_BUFFER_SIZE)
             command, name = received.decode().split(',')
             filepath = os.path.join(self.storage, name)
 
@@ -45,17 +45,17 @@ class ClientThread(threading.Thread):
         self.peer.send(message.encode())
 
         if file_exists:
-            end_exchange = self.peer.recv(constants.CONST_MAX_BUFFER_SIZE)
+            end_exchange = self.peer.recv(constants.MAX_BUFFER_SIZE)
             if int(end_exchange.decode()) is 1:  # No desea sobreescribirlo
                 return
 
         file = open(filepath, "wb")
         print("Saving " + name + " in " + self.storage)
 
-        received = self.peer.recv(constants.CONST_MAX_BUFFER_SIZE)
+        received = self.peer.recv(constants.MAX_BUFFER_SIZE)
         while received != b'':
             file.write(received)
-            received = self.peer.recv(constants.CONST_MAX_BUFFER_SIZE)
+            received = self.peer.recv(constants.MAX_BUFFER_SIZE)
 
         print(name + " was successfully uploaded.")
         file.close()
@@ -78,7 +78,7 @@ class ClientThread(threading.Thread):
                 while continue_reading:
                     try:
                         bytes_read = file.read_next_section(constants.
-                                                            CONST_MAX_BUFFER_SIZE)
+                                                            MAX_BUFFER_SIZE)
                         self.peer.send(bytes_read)
                     except EOFError:
                         continue_reading = False

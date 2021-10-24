@@ -29,7 +29,7 @@ class GbnSender:
 
     def send(self, message: bytes, add_metadata: bool = True):
         if (self.should_keep_running):
-            if ((len(message) + shared_constants.METADATA_SIZE) <= shared_constants.CONST_MAX_BUFFER_SIZE):
+            if ((len(message) + shared_constants.METADATA_SIZE) <= shared_constants.MAX_BUFFER_SIZE):
                 packet = self.window.add_packet(message, add_metadata)
                 self.sender.send(packet)
             else:

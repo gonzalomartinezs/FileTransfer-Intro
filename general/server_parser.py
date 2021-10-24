@@ -27,7 +27,7 @@ def parse_arguments():
     # Pasa los argumentos introducidos a un objeto contenedor
     args = sv_parser.parse_args()
 
-    if args.port < CONST_MIN_PORT or args.port > CONST_MAX_PORT:
+    if args.port < MIN_PORT or args.port > MAX_PORT:
         sv_parser.error("Port value must be in between [1024-65535]")
 
     if not dir_exists(args.storage):

@@ -43,7 +43,7 @@ def parse_arguments():
 
     args = cl_parser.parse_args()
 
-    if args.port < CONST_MIN_PORT or args.port > CONST_MAX_PORT:
+    if args.port < MIN_PORT or args.port > MAX_PORT:
         cl_parser.error("Port value must be in between [1024-65535]")
 
     if args.command == "upload-file" and not dir_exists(args.source):
