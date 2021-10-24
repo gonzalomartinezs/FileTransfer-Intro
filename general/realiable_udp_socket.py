@@ -1,4 +1,5 @@
 from general import ack_constants, shared_constants
+from general import accepted_connections
 from go_back_n.gbn_sender import GbnSender
 from stop_and_wait.sw_sender import StopAndWaitSender
 from general.receiver import Receiver
@@ -22,10 +23,11 @@ class ReliableUDPSocketType(Enum):
     SERVER_HANDLER = 3
 
 class ReliableUDPSocket:
+    accepted_connections = AcceptedConnections()
+
     def __init__(self, use_goback_n: bool = False):
         self.sckt = AtomicUDPSocket()
         self.type = None
-        self.accepted_connectons = None
         self.ack_queue = Queue()
         self.msg_queue = Queue()
         self.use_goback_n = use_goback_n
@@ -79,7 +81,7 @@ class ReliableUDPSocket:
         else:
             raise SocketAlreadySetupError()
 
-        self.accepted_connectons = AcceptedConnections()
+        self.accepted_connections = ReliableUDPSocket.accepted_connections
         self.keep_listening = True
         self.new_connections_queue = Queue(max_connections)
         self.thread = threading.Thread(target = self._listen_for_connections, daemon=True)
@@ -108,7 +110,7 @@ class ReliableUDPSocket:
             self.keep_receiving_messages = False
             self.thread.join()
             self.sckt.close()
-            self.accepted_connectons.remove_connection(self.peer_addr)
+            self.accepted_connections.remove_connection(self.peer_addr)
         elif self.type == ReliableUDPSocketType.SERVER_LISTENER:
             self.keep_listening = False
             self.thread.join()
@@ -137,15 +139,15 @@ class ReliableUDPSocket:
                 packet, addr = self.sckt.recvfrom(shared_constants.MAX_BUFFER_SIZE)
                 if self.new_connections_queue.full(): # We ignore the connection request if the queue is full
                     continue
-                if (packet[0] == shared_constants.SYN_TYPE_NUM) and (not addr in self.accepted_connectons):
+                if (packet[0] == shared_constants.SYN_TYPE_NUM) and (not addr in self.accepted_connections):
                     connection_seq_num = int.from_bytes(packet[1:], byteorder='big', signed=False)
                     n_sckt = ReliableUDPSocket(self.use_goback_n)
                     base_seq_num = random.randrange(0, shared_constants.MAX_SEQ_NUM)
-                    n_sckt.accepted_connectons = self.accepted_connectons
+                    n_sckt.accepted_connections = self.accepted_connections
                     n_sckt.type = ReliableUDPSocketType.SERVER_HANDLER
                     n_sckt._initialize_connection(addr, base_seq_num, connection_seq_num)
                     n_sckt.sender.send(shared_constants.OK_TYPE_NUM.to_bytes(1, byteorder='big', signed=False) + base_seq_num.to_bytes(2, byteorder='big', signed=False), add_metadata=False)
-                    self.accepted_connectons.add_connection(addr)
+                    self.accepted_connections.add_connection(addr)
                     self.new_connections_queue.put(n_sckt)
             except:
                 pass
