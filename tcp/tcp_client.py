@@ -8,6 +8,7 @@ import general.file_finder as file_finder
 from general.file_reader import FileReader
 
 
+
 def upload_file(arguments, cl_socket):
     msg = "0," + arguments.name
     cl_socket.send(msg.encode())

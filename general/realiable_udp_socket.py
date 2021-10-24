@@ -11,6 +11,8 @@ import random
 import time
 import socket
 
+WINDOW_SIZE = 10
+
 class SocketAlreadySetupError(Exception):
     pass
 
@@ -83,7 +85,7 @@ class ReliableUDPSocket:
         self.thread = threading.Thread(target = self._listen_for_connections, daemon=True)
         self.thread.start()
 
-    def accept(self): #TODO indicar que devuelve un dato de tipo ReliableUDPSocket
+    def accept(self): #TODO indicar que esto retorna un ReliableUDPSocket
         return self.new_connections_queue.get()
 
     def send(self, msg: bytes):
@@ -121,7 +123,7 @@ class ReliableUDPSocket:
         self.peer_addr = dest_addr
         self.receiver = Receiver(self.sckt, self.msg_queue, connection_seq_num)
         if (self.use_goback_n):
-            self.sender = GbnSender(self.sckt, self.ack_queue, 10, base_seq_num) #TODO volar el 10 hardcodeado del window_size
+            self.sender = GbnSender(self.sckt, self.ack_queue, WINDOW_SIZE, base_seq_num)
         else:
             self.sender = StopAndWaitSender(self.sckt, self.ack_queue, base_seq_num)
         self.thread = threading.Thread(target = self._receive_messages, daemon=True)
@@ -149,18 +151,18 @@ class ReliableUDPSocket:
                 pass
 
 
-    def _receive_messages(self): #TODO tenemos que chequear que los mensajes esten bien armados en cada caso, por ej que el mensaje de tipo ACK no tenga mas de 2 bytes despues del byte del ACK (que son los 2 bytes del seq_num)
+    def _receive_messages(self):
         self.sckt.settimeout(0.5) #TODO ver si hay una alternativa a un timeout para el tema del close, pero creo que no hay mucha
         while (self.keep_receiving_messages):
             try:
                 packet = self.sckt.recv(shared_constants.MAX_BUFFER_SIZE)
                 packet_type = packet[0]
                 packet = packet[1:] # We remove the packet type before redirecting it
-                if packet_type == ack_constants.ACK_TYPE_NUM:
+                if (packet_type == ack_constants.ACK_TYPE_NUM) and (len(packet) == 2):
                     self.ack_queue.put(packet)
-                elif packet_type == shared_constants.MSG_TYPE_NUM:
+                elif (packet_type == shared_constants.MSG_TYPE_NUM) and (len(packet) >= 2):
                     self.msg_queue.put(packet)
-                elif packet_type == shared_constants.OK_TYPE_NUM:
+                elif (packet_type == shared_constants.OK_TYPE_NUM) and (len(packet) == 2):
                     self.msg_queue.put(packet)
             except:
                 pass
