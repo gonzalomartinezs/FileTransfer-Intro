@@ -1,10 +1,11 @@
 import socket
 import time
+import sys
+sys.path.insert(1, '../')  # To fix library includes
+
 import general.atomic_udp_socket as AtomicUDPSocket
 import general.ack_constants as ack_constants
 import general.shared_constants as shared_constants
-import sys
-sys.path.insert(1, '../')  # TODO wtf is this?
 
 
 class InvalidDestinationError(Exception):

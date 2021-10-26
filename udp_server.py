@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(1, '../')  # To fix library includes
+
 from general.realiable_udp_socket import ReliableUDPSocket
 from general.server_parser import parse_arguments
 import general.shared_constants as constants

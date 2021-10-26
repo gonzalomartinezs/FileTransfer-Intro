@@ -1,4 +1,7 @@
 import socket
+import sys
+sys.path.insert(1, '../')  # To fix library includes
+
 from general.server_parser import parse_arguments
 from clients_acceptor import ClientsAcceptor
 import general.shared_constants as constants

@@ -1,12 +1,12 @@
-from general.atomic_udp_socket import AtomicUDPSocket
-from go_back_n.gbn_window import GbnWindow
 import threading
-import general.ack_constants as ack_constants
-import general.shared_constants as shared_constants
 import time
 from queue import Queue
 import queue
 
+from go_back_n.gbn_window import GbnWindow
+import general.ack_constants as ack_constants
+import general.shared_constants as shared_constants
+from general.atomic_udp_socket import AtomicUDPSocket
 
 class InvalidDestinationError(Exception):
     pass
