@@ -2,6 +2,7 @@ from general.realiable_udp_socket import ReliableUDPSocket
 from general.server_parser import parse_arguments
 import general.shared_constants as constants
 
+
 def main(args):
     sckt = ReliableUDPSocket(use_goback_n=True)
     sckt.bind((args.host, args.port))
@@ -10,5 +11,6 @@ def main(args):
     sckt.close()
     while True:
         print(client_sckt.recv().decode(), end='')
+
 
 main(parse_arguments())

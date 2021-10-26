@@ -1,5 +1,4 @@
 from general.atomic_udp_socket import AtomicUDPSocket
-import general.shared_constants as shared_constants
 from go_back_n.gbn_window import GbnWindow
 import threading
 import general.ack_constants as ack_constants
@@ -12,24 +11,34 @@ import queue
 class InvalidDestinationError(Exception):
     pass
 
+
 class InvalidMessageSize(Exception):
     pass
+
 
 class CloseSenderError(Exception):
     pass
 
+
 class GbnSender:
-    def __init__(self, sender: AtomicUDPSocket, receiver: Queue, window_size: int, base_seq_num: int):
+    def __init__(
+            self,
+            sender: AtomicUDPSocket,
+            receiver: Queue,
+            window_size: int,
+            base_seq_num: int):
         self.window = GbnWindow(window_size, base_seq_num)
         self.sender = sender
         self.receiver = receiver
         self.should_keep_running = True
-        self.ack_thread = threading.Thread(target=self._confirm_packets, daemon=True)
+        self.ack_thread = threading.Thread(
+            target=self._confirm_packets, daemon=True)
         self.ack_thread.start()
 
     def send(self, message: bytes, add_metadata: bool = True):
         if (self.should_keep_running):
-            if ((len(message) + shared_constants.METADATA_SIZE) <= shared_constants.MAX_BUFFER_SIZE):
+            if ((len(message) + shared_constants.METADATA_SIZE)
+                    <= shared_constants.MAX_BUFFER_SIZE):
                 packet = self.window.add_packet(message, add_metadata)
                 self.sender.send(packet)
             else:
@@ -42,7 +51,7 @@ class GbnSender:
         self.window.close()
         self.ack_thread.join()
 
-    #PRIVATE
+    # PRIVATE
     def _resend_all_packets(self):
         for packet in self.window.get_unacknowledged_packets():
             self.sender.send(packet)
@@ -64,8 +73,10 @@ class GbnSender:
                 packet = self.receiver.get(timeout=time_until_timeout)
                 waited_time += time.time() - before_recv_time
                 time_until_timeout = base_timeout - waited_time
-                received_seq_num = int.from_bytes(packet, byteorder='big', signed=False)
-                checked_all_messages = self.window.update_base(received_seq_num)
+                received_seq_num = int.from_bytes(
+                    packet, byteorder='big', signed=False)
+                checked_all_messages = self.window.update_base(
+                    received_seq_num)
                 waited_time = 0
             except queue.Empty:
-               time_until_timeout = 0
+                time_until_timeout = 0

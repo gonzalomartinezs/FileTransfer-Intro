@@ -1,5 +1,5 @@
 import argparse
-from general.shared_constants import *
+import general.shared_constants as constants
 from general.file_finder import dir_exists
 
 
@@ -14,8 +14,8 @@ def parse_arguments():
     # Argumentos posicionales (obligatorios)
     sv_parser.add_argument("host", help="service IP address")
     sv_parser.add_argument("port", help="service port", type=int)
-    sv_parser.add_argument("storage",
-                           help="storage dir path")  # podria ser opcional si definimos un default
+    # podria ser opcional si definimos un default
+    sv_parser.add_argument("storage", help="storage dir path")
 
     # Argumentos opcionales (llevan '-' adelante)
     group = sv_parser.add_mutually_exclusive_group()
@@ -27,7 +27,7 @@ def parse_arguments():
     # Pasa los argumentos introducidos a un objeto contenedor
     args = sv_parser.parse_args()
 
-    if args.port < MIN_PORT or args.port > MAX_PORT:
+    if args.port < constants.MIN_PORT or args.port > constants.MAX_PORT:
         sv_parser.error("Port value must be in between [1024-65535]")
 
     if not dir_exists(args.storage):

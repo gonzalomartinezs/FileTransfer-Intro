@@ -1,12 +1,12 @@
 import socket
-from socket import SHUT_RDWR
 import threading
+
 
 class AtomicUDPSocket:
     def __init__(self):
         self.send_mutex = threading.Lock()
         self.sckt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        
+
     def bind(self, addr: tuple[str, int]):
         self.sckt.bind(addr)
 
@@ -18,7 +18,7 @@ class AtomicUDPSocket:
         self.sckt.sendto(msg, addr)
         self.send_mutex.release()
 
-    def send(self, msg:bytes):
+    def send(self, msg: bytes):
         self.send_mutex.acquire()
         self.sckt.send(msg)
         self.send_mutex.release()

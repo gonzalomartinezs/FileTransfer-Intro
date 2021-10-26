@@ -1,23 +1,23 @@
 import socket
 import os
-import time
 
 import general.shared_constants as constants
 import general.client_parser as client_parser
 import general.file_finder as file_finder
 from general.file_reader import FileReader
 
+
 def upload_file(arguments, cl_socket):
     msg = "0," + arguments.name
     cl_socket.send(msg.encode())
 
     response = int(cl_socket.recv(constants.MAX_BUFFER_SIZE).decode())
-    if response is 1:
+    if response == 1:
         print("The file already exists on the server.")
         option = "-1"
         while option != "y" and option != "n":
             option = input("Do you want to override it? (y/n)")
-        if option is "n":
+        if option == "n":
             cl_socket.send("1".encode())
             return
         else:
@@ -38,7 +38,7 @@ def upload_file(arguments, cl_socket):
             except EOFError:
                 continue_reading = False
                 print("File successfully uploaded.")
-            except:
+            except BaseException:
                 continue_reading = False
                 print("An error occurred while uploading the file.")
 
@@ -50,7 +50,7 @@ def download_file(arguments, cl_socket):
     cl_socket.send(msg.encode())
 
     response = int(cl_socket.recv(constants.MAX_BUFFER_SIZE).decode())
-    if response is 1:
+    if response == 1:
         print("The file does not exist on the server.")
         return
 
@@ -59,7 +59,7 @@ def download_file(arguments, cl_socket):
         while option != "y" and option != "n":
             option = input("The file already exists. "
                            "Do you want to override it? (y/n)")
-        if option is "n":
+        if option == "n":
             return
 
     filepath = os.path.join(arguments.dest, arguments.name)
@@ -79,7 +79,7 @@ client_socket.connect((args.host, args.port))
 
 if args.command == "upload-file":
     upload_file(args, client_socket)
-if args.command = "download-file":
+if args.command == "download-file":
     download_file(args, client_socket)
 else:
     print("Invalid command. Please insert either download-file or upload-file")

@@ -1,5 +1,6 @@
 import threading
 
+
 class AcceptedConnections:
     def __init__(self):
         self.mutex = threading.Lock()

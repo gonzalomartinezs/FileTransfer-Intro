@@ -1,3 +1,3 @@
 ACK_PACKET_SIZE = 2
 ACK_TYPE_NUM = 130
-BASE_TIMEOUT = 5 # in ms
+BASE_TIMEOUT = 5  # in ms

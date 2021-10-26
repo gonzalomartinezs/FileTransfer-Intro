@@ -46,7 +46,7 @@ class ClientThread(threading.Thread):
 
         if file_exists:
             end_exchange = self.peer.recv(constants.MAX_BUFFER_SIZE)
-            if int(end_exchange.decode()) is 1:  # No desea sobreescribirlo
+            if int(end_exchange.decode()) == 1:  # No desea sobreescribirlo
                 return
 
         file = open(filepath, "wb")
@@ -83,7 +83,7 @@ class ClientThread(threading.Thread):
                     except EOFError:
                         continue_reading = False
                         print("File successfully sent.")
-                    except:
+                    except BaseException:
                         continue_reading = False
                         print("An error occurred while sending the file.")
 
