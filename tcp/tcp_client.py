@@ -77,7 +77,12 @@ def download_file(arguments, cl_socket):
 
 args = client_parser.parse_arguments()
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client_socket.connect((args.host, args.port))
+
+try:
+    client_socket.connect((args.host, args.port))
+except ConnectionRefusedError:
+    print("The connection has been rejected. The program will close")
+    sys.exit(0)
 
 if args.command == "upload-file":
     upload_file(args, client_socket)
