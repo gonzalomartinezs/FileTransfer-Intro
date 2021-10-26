@@ -26,17 +26,17 @@ def parse_arguments():
         "download-file", help="Download a file from the specified server")
 
     # Argumentos posicionales (obligatorios)
-    upload_parser.add_argument("-H", dest="host", help="service IP address", required=True)
-    upload_parser.add_argument("-p", dest="port", help="service port", type=int, required=True)
+    upload_parser.add_argument("-H", dest="host", help="service IP address", type=str, default='127.0.0.1')
+    upload_parser.add_argument("-p", dest="port", help="service port", type=int, default=8080)
     # podria ser opcional si definimos un default
-    upload_parser.add_argument("-s", dest="source", help="source file path", required=True)
-    upload_parser.add_argument("-n", dest="name", help="file name", required=True)
+    upload_parser.add_argument("-s", dest="source", help="source file path", type=str, default='./')
+    upload_parser.add_argument("-n", dest="name", help="file name", type=str, default='test.txt')
 
-    download_parser.add_argument("-H", dest="host", help="service IP address", required=True)
-    download_parser.add_argument("-p", dest="port", help="service port", type=int, required=True)
+    download_parser.add_argument("-H", dest="host", help="service IP address", type=str, default='127.0.0.1')
+    download_parser.add_argument("-p", dest="port", help="service port", type=int, default=8080)
     # podria ser opcional si definimos un default
-    download_parser.add_argument("-d", dest="dest", help="destination file path", required=True)
-    download_parser.add_argument("-n", dest="name", help="file name", required=True)
+    download_parser.add_argument("-d", dest="dest", help="destination file path", type=str, default='./')
+    download_parser.add_argument("-n", dest="name", help="file name", type=str, default='test.txt')
 
     # Argumentos opcionales (llevan '-' adelante)
     __add_optional_arguments(cl_parser)
