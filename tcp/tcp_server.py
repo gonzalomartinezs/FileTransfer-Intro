@@ -15,12 +15,14 @@ sv_socket.listen(constants.MAX_CONNECTIONS)
 acceptor = ClientsAcceptor(sv_socket, args)
 acceptor.start()
 
-user_input = input("Con 'q' corta\n")
+user_input = ''
 while user_input != "q":
     print("Hay " + str(len(acceptor.clients)) + " clientes")
-    user_input = input("Con 'q' corta\n")
+    user_input = input("Para finalizar ingrese la tecla 'q' \n")
 
 acceptor.stop()
-sv_socket.shutdown(socket.SHUT_RDWR)
+
+if len(acceptor.clients) > 0:
+    sv_socket.shutdown(socket.SHUT_RDWR)
 sv_socket.close()
 acceptor.join()
