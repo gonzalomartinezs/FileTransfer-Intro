@@ -7,8 +7,6 @@ import general.client_parser as client_parser
 import general.file_finder as file_finder
 from general.file_reader import FileReader
 
-
-
 def upload_file(arguments, cl_socket):
     msg = "0," + arguments.name
     cl_socket.send(msg.encode())
@@ -81,7 +79,9 @@ client_socket.connect((args.host, args.port))
 
 if args.command == "upload-file":
     upload_file(args, client_socket)
-else:
+if args.command = "download-file":
     download_file(args, client_socket)
+else:
+    print("Invalid command. Please insert either download-file or upload-file")
 
 client_socket.close()
