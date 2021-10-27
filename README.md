@@ -19,7 +19,7 @@ Se listarán las diferentes bibliotecas necesarias para correr el proyecto
 Para ejecutar el cliente deberán ingresarse los comandos en la forma
 
 ```python
-./client.py [-h] [-v | -q] host port [dest/source] name
+./client.py [-h] [-v | -q] [-H host] [-p port] [-d/-s dest/source] [-n name]
 ```
 
 El cliente cuenta con dos modos de ejecución:
@@ -32,10 +32,10 @@ A continuación se listarán los comandos para cada modo.
 #### upload-file
 
 Positional arguments:
-*  host           service IP address
-*  port           service port
-*  source         source file path
-*  name           file name
+*  -H host           service IP address
+*  -p port           service port
+*  -s source         source file path
+*  -n name           file name
 
 Optional arguments:
 *  -h, --help     show this help message and exit
@@ -44,10 +44,10 @@ Optional arguments:
 
 #### download-file
 Positional arguments:
-*  host           service IP address
-*  port           service port
-*  dest           destination file path
-*  name           file name
+*  -H host           service IP address
+*  -p port           service port
+*  -d dest           destination file path
+*  -n name           file name
 
 Optional arguments:
 *  -h, --help     show this help message and exit
@@ -62,9 +62,9 @@ El servidor cuenta con un solo comando de ejecución
 ```
 
 Positional arguments:
-*  host           service IP address
-*  port           service port
-*  storage        storage dir path
+*  -H host           service IP address
+*  -p port           service port
+*  -s storage        storage dir path
 
 Optional arguments:
 *  -h, --help     show this help message and exit
