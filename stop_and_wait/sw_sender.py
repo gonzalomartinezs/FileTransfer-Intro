@@ -65,13 +65,15 @@ class StopAndWaitSender:
                 # Check if response is an ACK
                 # If the response received is the current seq_num we can
                 # continue sending the next packet
-                if int.from_bytes(response[1:], byteorder='big', signed=False) == self.seq_num:
-                    self.seq_num += 1
-                    break
-                else:
-                    curr_timeout -= waited_time
-                    # If we received a delayed ack from a previous package
-                    # we ignore it
+                if response != b'':
+                    if int.from_bytes(response, byteorder='big', signed=False) == self.seq_num:
+                        print('CHAU')
+                        self.seq_num += 1
+                        break
+                    else:
+                        curr_timeout -= waited_time
+                        # If we received a delayed ack from a previous package
+                        # we ignore it
 
             except queue.Empty:
                 self.sckt.send(message)  # Resend message if timeout occurred
