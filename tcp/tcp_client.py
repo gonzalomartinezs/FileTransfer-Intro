@@ -1,4 +1,4 @@
-import socket
+#import socket
 import os
 import sys
 sys.path.insert(1, '../')  # To fix library includes
@@ -7,6 +7,7 @@ import general.shared_constants as constants
 import general.client_parser as client_parser
 import general.file_finder as file_finder
 from general.file_reader import FileReader
+from general.realiable_udp_socket import ReliableUDPSocket
 
 
 def upload_file(arguments, cl_socket):
@@ -29,13 +30,12 @@ def upload_file(arguments, cl_socket):
         filepath = os.path.join(arguments.source, arguments.name)
         file = FileReader(filepath)
     except IOError:
-        print("Unable to open file {}.".format(filepath))
+        print("Unable to open file {}.".format(filepath)) #TODO wtf is this
     else:
         continue_reading = True
         while continue_reading:
             try:
-                bytes_read = file.read_next_section(constants.
-                                                    MAX_BUFFER_SIZE)
+                bytes_read = file.read_next_section(1000)
                 cl_socket.send(bytes_read)
             except EOFError:
                 continue_reading = False
@@ -43,7 +43,7 @@ def upload_file(arguments, cl_socket):
             except BaseException:
                 continue_reading = False
                 print("An error occurred while uploading the file.")
-
+        cl_socket.send(b'FIN')
         file.close()
 
 
@@ -68,7 +68,7 @@ def download_file(arguments, cl_socket):
     file = open(filepath, "wb")
     received = cl_socket.recv(constants.MAX_BUFFER_SIZE)
 
-    while received != b'':
+    while received != b'FIN':
         file.write(received)
         received = cl_socket.recv(constants.MAX_BUFFER_SIZE)
 
@@ -76,7 +76,8 @@ def download_file(arguments, cl_socket):
 
 
 args = client_parser.parse_arguments()
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client_socket = ReliableUDPSocket(use_goback_n=False)
 client_socket.connect((args.host, args.port))
 
 if args.command == "upload-file":

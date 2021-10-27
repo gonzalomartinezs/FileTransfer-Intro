@@ -45,7 +45,8 @@ class Receiver:
                 packet[:2], byteorder='big', signed=False)
             if (packet_seq_number == self.expected_seq_num):
                 if not self.received_packets_queue.full():
-                    self.received_packets_queue.put(packet[2:])
+                    if packet[2:] != b'':
+                        self.received_packets_queue.put(packet[2:])
                     ack_message = (
                         ack_constants.ACK_TYPE_NUM).to_bytes(
                         1, byteorder='big', signed=False) + (

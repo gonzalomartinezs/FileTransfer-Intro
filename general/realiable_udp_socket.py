@@ -39,11 +39,11 @@ class ReliableUDPSocket:
         self.keep_receiving_messages = True
         self.peer_addr = None
 
-    def bind(self, addr: tuple[str, int]):
+    def bind(self, addr):
         self.sckt.bind(addr)
 
     # TODO agregar un timeout total en el que deje de intentar
-    def connect(self, addr: tuple[str, int]):
+    def connect(self, addr):
         if self.type is None:
             self.type = ReliableUDPSocketType.CLIENT
         else:
@@ -55,7 +55,7 @@ class ReliableUDPSocket:
         waited_time = 0
         time_until_timeout = base_timeout
         self.sckt.sendto(
-            shared_constants.SYN_TYPE_NUM.to_bytes(
+                shared_constants.SYN_TYPE_NUM.to_bytes(
                 1,
                 byteorder='big',
                 signed=False) +
@@ -82,8 +82,7 @@ class ReliableUDPSocket:
                     waited_time = 0
                     time_until_timeout = base_timeout
                 self.sckt.settimeout(time_until_timeout)
-                packet, r_addr = self.sckt.recvfrom(
-                    shared_constants.MAX_BUFFER_SIZE)
+                packet, r_addr = self.sckt.recvfrom(shared_constants.MAX_BUFFER_SIZE)
                 waited_time += time.time() - before_recv_time
                 time_until_timeout = base_timeout - waited_time
                 if (r_addr[0] == addr[0]) and (r_addr[1] != addr[1]) and (
@@ -116,7 +115,7 @@ class ReliableUDPSocket:
     def send(self, msg: bytes):
         self.sender.send(msg)
 
-    def recv(self) -> bytes:
+    def recv(self, _num: int) -> bytes:
         return self.receiver.receive()
 
     # IMPORTANT: DO NOT attempt to reuse the socket after executing close() on
@@ -145,8 +144,7 @@ class ReliableUDPSocket:
     # PRIVATE
 
     def _initialize_connection(self,
-                               dest_addr: tuple[str,
-                                                int],
+                               dest_addr,
                                base_seq_num: int,
                                connection_seq_num: int):
         # Now we can only receive packets from this address
@@ -200,8 +198,8 @@ class ReliableUDPSocket:
                         add_metadata=False)
                     self.accepted_connections.add_connection(addr)
                     self.new_connections_queue.put(n_sckt)
-            except BaseException:
-                pass
+            except socket.timeout:
+                print("Base exception")
 
     def _receive_messages(self):
         # TODO ver si hay una alternativa a un timeout para el tema del close,
@@ -222,5 +220,5 @@ class ReliableUDPSocket:
                 elif (packet_type == shared_constants.OK_TYPE_NUM) and \
                         (len(packet) == 2):
                     self.msg_queue.put(packet)
-            except BaseException:
-                pass
+            except socket.timeout:
+                print("base exception in asdasdasdasdas")

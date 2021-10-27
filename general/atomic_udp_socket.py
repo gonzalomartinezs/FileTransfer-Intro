@@ -7,13 +7,13 @@ class AtomicUDPSocket:
         self.send_mutex = threading.Lock()
         self.sckt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-    def bind(self, addr: tuple[str, int]):
+    def bind(self, addr):
         self.sckt.bind(addr)
 
-    def connect(self, addr: tuple[str, int]):
+    def connect(self, addr):
         self.sckt.connect(addr)
 
-    def sendto(self, msg: bytes, addr: tuple[str, int]):
+    def sendto(self, msg: bytes, addr):
         self.send_mutex.acquire()
         self.sckt.sendto(msg, addr)
         self.send_mutex.release()
@@ -23,7 +23,7 @@ class AtomicUDPSocket:
         self.sckt.send(msg)
         self.send_mutex.release()
 
-    def recvfrom(self, buff_size: int) -> tuple[bytes, tuple[str, int]]:
+    def recvfrom(self, buff_size: int):
         return self.sckt.recvfrom(buff_size)
 
     def recv(self, buff_size: int) -> bytes:

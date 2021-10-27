@@ -11,7 +11,7 @@ class ClientsAcceptor(threading.Thread):
         self.args = arguments
 
     def run(self):
-        while self.keep_running is True:
+        while self.keep_running == True:
             try:
                 self.__release_dead_clients()
 
@@ -21,7 +21,7 @@ class ClientsAcceptor(threading.Thread):
                 self.clients[-1].start()
 
             except Exception:
-                pass
+                print("Agarre un exception")
 
     def stop(self):
         self.keep_running = False

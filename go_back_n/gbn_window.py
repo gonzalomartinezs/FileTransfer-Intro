@@ -17,9 +17,7 @@ class GbnWindow:
         while self._is_full():
             self.cv.wait()
         if add_metadata:
-            packet = (shared_constants.MSG_TYPE_NUM).to_bytes(
-                1, byteorder='big')
-            + (self.next_seq_num).to_bytes(2, byteorder='big') + packet
+            packet = (shared_constants.MSG_TYPE_NUM).to_bytes(1, byteorder='big') + (self.next_seq_num).to_bytes(2, byteorder='big') + packet
         self.packet_buffer.append(packet)
         self._add_to_seq_num()
         # TODO: VER SI AGREGAMOS CHEQUEO DE SI HAY QUE HACER EL NOTIFY
