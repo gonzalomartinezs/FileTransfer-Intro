@@ -25,7 +25,7 @@ class ReliableUDPSocketType(Enum):
 
 
 class ReliableUDPSocket:
-    accepted_connections = AcceptedConnections()
+    accepted_connections = AcceptedConnections() # Used by the listeners and handlers
 
     def __init__(self, use_goback_n: bool = False):
         self.sckt = AtomicUDPSocket()
@@ -36,8 +36,7 @@ class ReliableUDPSocket:
         self.sender = None
         self.receiver = None
         self.thread = None
-        self.keep_receiving_messages = True
-        self.peer_addr = None
+        self.keep_running = True
 
     def bind(self, addr):
         self.sckt.bind(addr)
@@ -102,52 +101,53 @@ class ReliableUDPSocket:
         else:
             raise SocketAlreadySetupError()
 
-        self.accepted_connections = ReliableUDPSocket.accepted_connections
-        self.keep_listening = True
         self.new_connections_queue = Queue(max_connections)
         self.thread = threading.Thread(
             target=self._listen_for_connections, daemon=True)
         self.thread.start()
 
-    def accept(self):  # TODO indicar que esto retorna un ReliableUDPSocket
+    def accept(self):  # TODO indicar que esto retorna un (ReliableUDPSocket, Addr)
         return self.new_connections_queue.get()
 
     def send(self, msg: bytes):
         self.sender.send(msg)
 
-    def recv(self, _num: int) -> bytes:
-        return self.receiver.receive()
+    def recv(self, buff_size: int) -> bytes:
+        return self.receiver.receive()[:buff_size]
 
     # IMPORTANT: DO NOT attempt to reuse the socket after executing close() on
-    # it!
+    # it! Otherwhise you will get an exception!
     def close(self):
         if self.type == ReliableUDPSocketType.CLIENT:
             self.sender.close()
             self.receiver.close()
-            self.keep_receiving_messages = False
+            self.keep_running = False
             self.thread.join()
             self.sckt.close()
         elif self.type == ReliableUDPSocketType.SERVER_HANDLER:
             self.sender.close()
             self.receiver.close()
-            self.keep_receiving_messages = False
+            self.keep_running = False
             self.thread.join()
             self.sckt.close()
-            self.accepted_connections.remove_connection(self.peer_addr)
+            ReliableUDPSocket.accepted_connections.remove_connection(self.peer_addr)
         elif self.type == ReliableUDPSocketType.SERVER_LISTENER:
-            self.keep_listening = False
+            self.keep_running = False
             self.thread.join()
             self.sckt.close()
         # If type == None then there is nothing to be done so no error is
         # raised
 
-    # PRIVATE
+
+
+
+    ####################### PRIVATE ####################### 
 
     def _initialize_connection(self,
                                dest_addr,
                                base_seq_num: int,
                                connection_seq_num: int):
-        # Now we can only receive packets from this address
+        # Now we can only send and receive packets to and from this address
         self.sckt.connect(dest_addr)
         self.peer_addr = dest_addr
         self.receiver = Receiver(self.sckt, self.msg_queue, connection_seq_num)
@@ -168,21 +168,20 @@ class ReliableUDPSocket:
         # TODO ver si hay una alternativa a un timeout para el tema del close,
         # pero creo que no hay mucha
         self.sckt.settimeout(0.5)
-        while self.keep_listening:
+        while self.keep_running:
             try:
                 packet, addr = self.sckt.recvfrom(
                     shared_constants.MAX_BUFFER_SIZE)
-                if self.new_connections_queue.full(
-                ):  # We ignore the connection request if the queue is full
+                if self.new_connections_queue.full():
+                    # We ignore the connection request if the queue is full
                     continue
                 if (packet[0] == shared_constants.SYN_TYPE_NUM) and (
-                        addr not in self.accepted_connections):
+                        addr not in ReliableUDPSocket.accepted_connections):
                     connection_seq_num = int.from_bytes(
                         packet[1:], byteorder='big', signed=False)
                     n_sckt = ReliableUDPSocket(self.use_goback_n)
                     base_seq_num = random.randrange(
                         0, shared_constants.MAX_SEQ_NUM)
-                    n_sckt.accepted_connections = self.accepted_connections
                     n_sckt.type = ReliableUDPSocketType.SERVER_HANDLER
                     n_sckt._initialize_connection(
                         addr, base_seq_num, connection_seq_num)
@@ -196,16 +195,16 @@ class ReliableUDPSocket:
                             byteorder='big',
                             signed=False),
                         add_metadata=False)
-                    self.accepted_connections.add_connection(addr)
-                    self.new_connections_queue.put(n_sckt)
+                    ReliableUDPSocket.accepted_connections.add_connection(addr)
+                    self.new_connections_queue.put((n_sckt, addr))
             except socket.timeout:
-                print("Base exception")
+                pass
 
     def _receive_messages(self):
         # TODO ver si hay una alternativa a un timeout para el tema del close,
         # pero creo que no hay mucha
         self.sckt.settimeout(0.5)
-        while (self.keep_receiving_messages):
+        while self.keep_running:
             try:
                 packet = self.sckt.recv(shared_constants.MAX_BUFFER_SIZE)
                 packet_type = packet[0]
@@ -221,4 +220,4 @@ class ReliableUDPSocket:
                         (len(packet) == 2):
                     self.msg_queue.put(packet)
             except socket.timeout:
-                print("base exception in asdasdasdasdas")
+                pass

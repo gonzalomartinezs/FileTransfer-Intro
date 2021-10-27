@@ -30,13 +30,13 @@ class GbnSender:
         self.window = GbnWindow(window_size, base_seq_num)
         self.sender = sender
         self.receiver = receiver
-        self.should_keep_running = True
+        self.keep_running = True
         self.ack_thread = threading.Thread(
             target=self._confirm_packets, daemon=True)
         self.ack_thread.start()
 
     def send(self, message: bytes, add_metadata: bool = True):
-        if (self.should_keep_running):
+        if self.keep_running:
             if ((len(message) + shared_constants.METADATA_SIZE)
                     <= shared_constants.MAX_BUFFER_SIZE):
                 packet = self.window.add_packet(message, add_metadata)
@@ -47,7 +47,7 @@ class GbnSender:
             raise CloseSenderError()
 
     def close(self):
-        self.should_keep_running = False
+        self.keep_running = False
         self.window.close()
         self.ack_thread.join()
 
@@ -62,7 +62,7 @@ class GbnSender:
         waited_time = 0
         time_until_timeout = base_timeout
 
-        while (self.should_keep_running or not checked_all_messages):
+        while self.keep_running or not checked_all_messages:
             before_recv_time = time.time()
             self.window.wait_for_sent_packet()
             try:

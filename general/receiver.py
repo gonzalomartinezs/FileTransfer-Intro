@@ -10,7 +10,6 @@ PACKET_QUEUE_SIZE = 5
 class ClosedSocketError(Exception):
     pass
 
-
 class Receiver:
     def __init__(
             self,
@@ -21,18 +20,18 @@ class Receiver:
         self.receiver = receiver
         self.expected_seq_num = expected_seq_num
         self.received_packets_queue = Queue(PACKET_QUEUE_SIZE)
-        self.should_keep_running = True
+        self.keep_running = True
         self.ack_thread = threading.Thread(
             target=self._receive_packets, daemon=True)
         self.ack_thread.start()
 
     def receive(self) -> bytes:
-        if not self.should_keep_running:
+        if not self.keep_running:
             raise ClosedSocketError()
         return self.received_packets_queue.get()
 
     def close(self):
-        self.should_keep_running = False
+        self.keep_running = False
         # This avoids getting blocked in the receiver.get() method call
         self.receiver.put(None)
         self.ack_thread.join()
@@ -40,12 +39,12 @@ class Receiver:
     # PRIVATE
     def _receive_packets(self):
         packet = self.receiver.get()
-        while (self.should_keep_running):
+        while (self.keep_running):
             packet_seq_number = int.from_bytes(
                 packet[:2], byteorder='big', signed=False)
             if (packet_seq_number == self.expected_seq_num):
                 if not self.received_packets_queue.full():
-                    if packet[2:] != b'':
+                    if packet[2:] != b'': # This avoids pushing the OK null body as an actual message
                         self.received_packets_queue.put(packet[2:])
                     ack_message = (
                         ack_constants.ACK_TYPE_NUM).to_bytes(
@@ -55,9 +54,7 @@ class Receiver:
                     self.sender.send(ack_message)
                     self.expected_seq_num += 1
             else:
-                latest_ack_seq_num = (self.expected_seq_num - 1)
-                if self.expected_seq_num != 0 and \
-                        shared_constants.MAX_SEQ_NUM:  # TODO: Check this
-                    ack_message = (ack_constants.ACK_TYPE_NUM).to_bytes(1, byteorder='big', signed=False) + (latest_ack_seq_num - 1).to_bytes(2, byteorder='big', signed=False)
+                last_ack_seq_num = (self.expected_seq_num - 1) if self.expected_seq_num != 0 else shared_constants.MAX_SEQ_NUM
+                ack_message = (ack_constants.ACK_TYPE_NUM).to_bytes(1, byteorder='big', signed=False) + (last_ack_seq_num - 1).to_bytes(2, byteorder='big', signed=False)
                 self.sender.send(ack_message)
             packet = self.receiver.get()

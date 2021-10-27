@@ -20,40 +20,14 @@ class GbnWindow:
             packet = (shared_constants.MSG_TYPE_NUM).to_bytes(1, byteorder='big') + (self.next_seq_num).to_bytes(2, byteorder='big') + packet
         self.packet_buffer.append(packet)
         self._add_to_seq_num()
-        # TODO: VER SI AGREGAMOS CHEQUEO DE SI HAY QUE HACER EL NOTIFY
         self.cv.notify_all()
         self.mutex.release()
         return packet
+    
 
-    def acknowledge(self):
-        self.mutex.acquire()
-        self.base += 1
-        self.packet_buffer.pop(0)
-        self.mutex.release()
-
-    def get_size(self) -> int:
-        self.mutex.acquire()
-        r = self.window_size
-        self.mutex.release()
-        return r
-
-    def get_base(self) -> int:
-        self.mutex.acquire()
-        r = self.base
-        self.mutex.release()
-        return r
-
-    def get_next_seq_num(self) -> int:
-        self.mutex.acquire()
-        r = self.next_seq_num
-        self.mutex.release()
-        return r
-
-    # Function description
     # Returns True if there are not any messages whose acknowledge was not
     # received, otherwise returns False
-
-    def update_base(self, received_seq_number: int):
+    def update_base(self, received_seq_number: int) -> bool:
         self.mutex.acquire()
 
         is_sequential_case = self.base <= received_seq_number and \
@@ -71,9 +45,9 @@ class GbnWindow:
             if (self.base > shared_constants.MAX_SEQ_NUM):
                 self.base = 0
             self.cv.notify_all()
-        is_buffer_empty = len(self.packet_buffer) == 0
-        self.mutex.release()
+        is_buffer_empty = (len(self.packet_buffer) == 0)
 
+        self.mutex.release()
         return is_buffer_empty
 
     def get_unacknowledged_packets(self):
