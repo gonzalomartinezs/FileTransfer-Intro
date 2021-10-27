@@ -12,10 +12,10 @@ def parse_arguments():
                     "ready to receive connections.")
 
     # Argumentos posicionales (obligatorios)
-    sv_parser.add_argument("-H", dest='host', help="service IP address", required=True)
-    sv_parser.add_argument("-p", dest='port', help="service port", type=int, required=True)
+    sv_parser.add_argument("-H", dest='host', help="service IP address", type=str, default='127.0.0.1')
+    sv_parser.add_argument("-p", dest='port', help="service port", type=int, default=8080)
     # podria ser opcional si definimos un default
-    sv_parser.add_argument("-s", dest='storage', help="storage dir path", required=True)
+    sv_parser.add_argument("-s", dest='storage', help="storage dir path", type=str, default='./')
 
     # Argumentos opcionales (llevan '-' adelante)
     group = sv_parser.add_mutually_exclusive_group()

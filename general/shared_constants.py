@@ -14,3 +14,5 @@ OK_TYPE_NUM = 47  # This indicates an accepted SYN request
 
 MAX_CONNECTIONS = 5
 UPD_BYTES_PER_FILE_READ = 1000
+
+UDP_USE_GO_BACK_N = True
