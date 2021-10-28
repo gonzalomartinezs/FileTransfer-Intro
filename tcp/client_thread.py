@@ -32,7 +32,6 @@ class ClientThread(threading.Thread):
         self.keep_running = False
 
     def is_dead(self):
-        print("ffofofo")
         return self.keep_running == False
 
     def __recv_file(self, name, filepath):
@@ -71,12 +70,12 @@ class ClientThread(threading.Thread):
             try:
                 file = FileReader(filepath)
             except IOError:
-                print("Unable to open file {}.".format(filepath))
+                print("Unable to open file " + filepath + ".")
             else:
                 continue_reading = True
                 while continue_reading:
                     try:
-                        bytes_read = file.read_next_section(1000) #TODO harcodeao para probar que ande
+                        bytes_read = file.read_next_section(constants.MAX_BUFFER_SIZE)
                         self.peer.send(bytes_read)
                     except EOFError:
                         continue_reading = False
