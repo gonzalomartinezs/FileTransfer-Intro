@@ -16,57 +16,62 @@ Se listarán las diferentes bibliotecas necesarias para correr el proyecto
 
 ### Cliente
 
-Para ejecutar el cliente deberán ingresarse los comandos en la forma
-
-```python
-./client.py [-h] [-v | -q] [-H host] [-p port] [-d/-s dest/source] [-n name]
-```
-
-El cliente cuenta con dos modos de ejecución:
-
-- upload-file         Upload a file to the specified server
-- download-file       Download a file from the specified server
-
-A continuación se listarán los comandos para cada modo.
+El cliente cuenta con dos acciones posibles, las cuales se detallan a continuación.
 
 #### upload-file
 
-Positional arguments:
-*  -H host           service IP address
-*  -p port           service port
-*  -s source         source file path
-*  -n name           file name
-
-Optional arguments:
-*  -h, --help     show this help message and exit
-*  -v, --verbose  increase output verbosity
-*  -q, --quiet    decrease output verbosity
-
-#### download-file
-Positional arguments:
-*  -H host           service IP address
-*  -p port           service port
-*  -d dest           destination file path
-*  -n name           file name
-
-Optional arguments:
-*  -h, --help     show this help message and exit
-*  -v, --verbose  increase output verbosity
-*  -q, --quiet    decrease output verbosity
-
-### Servidor
-El servidor cuenta con un solo comando de ejecución
+Este comando es utilizado para subir archivos al servidor especificado.
 
 ```python
-./client.py [-h] [-v | -q] host port storage
+python upload-file.py [-h] [-v | -q] [-H host] [-p port] [-s source] [-n name] [-m mode]
+```
+A continuación se listarán los comandos para cada modo.
+
+Argumentos posicionales:
+*  **-H host:** dirección IP a la que se desea conectar.
+*  **-p port:** puerto.
+*  **-d dest:** ruta de archivo a subir.
+*  **-n name:** nombre del archivo a subir.
+*  **-m mode:** tipo de socket a utilizar {tcp, gbn: UDP GoBackN, sw: UDP Stop&Wait}.           
+
+Argumentos opcionales:
+*  **-h, --help:** muestra una descripción de los parámetros y finaliza la ejecución.
+*  **-v, --verbose:** incrementa la verbosidad del output.
+*  **-q, --quiet:** decrementa la verbosidad del output.
+
+#### download-file
+Este comando es utilizado para descargar archivos del servidor especificado.
+
+```python
+python download-file.py [-h] [-v | -q] [-H host] [-p port] [-d dest] [-n name] [-m mode]
 ```
 
-Positional arguments:
-*  -H host           service IP address
-*  -p port           service port
-*  -s storage        storage dir path
+Argumentos posicionales:
+*  **-H host:** dirección IP a la que se desea conectar.
+*  **-p port:** puerto.
+*  **-d dest:** ruta de almacenamiento del archivo a descargar.
+*  **-n name:** nombre del archivo a descargar.
+*  **-m mode:** tipo de socket a utilizar {tcp, gbn: UDP GoBackN, sw: UDP Stop&Wait}.
 
-Optional arguments:
-*  -h, --help     show this help message and exit
-*  -v, --verbose  increase output verbosity
-*  -q, --quiet    decrease output verbosity
+Argumentos opcionales:
+*  **-h, --help:** muestra una descripción de los parámetros y finaliza la ejecución.
+*  **-v, --verbose:** incrementa la verbosidad del output.
+*  **-q, --quiet:** decrementa la verbosidad del output.
+
+### Servidor
+El servidor cuenta con un único comando de ejecución:
+
+```python
+python start-server.py [-h] [-v | -q] [-H host] [-p port] [-s storage] [-m mode]
+```
+
+Argumentos posicionales:
+*  **-H host:** dirección IP a la que se desea conectar.
+*  **-p port:** puerto.
+*  **-s storage:** ruta de almacenamiento de archivos del servidor.
+*  **-m mode:** tipo de socket a utilizar {tcp, gbn: UDP GoBackN, sw: UDP Stop&Wait}.
+
+Argumentos opcionales:
+*  **-h, --help:** muestra una descripción de los parámetros y finaliza la ejecución.
+*  **-v, --verbose:** incrementa la verbosidad del output.
+*  **-q, --quiet:** decrementa la verbosidad del output.
