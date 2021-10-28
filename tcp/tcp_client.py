@@ -1,6 +1,7 @@
-#import socket
+# import socket
 import os
 import sys
+
 sys.path.insert(1, '../')  # To fix library includes
 
 import general.shared_constants as constants
@@ -26,11 +27,11 @@ def upload_file(arguments, cl_socket):
         else:
             cl_socket.send("0".encode())
 
+    filepath = os.path.join(arguments.source, arguments.name)
     try:
-        filepath = os.path.join(arguments.source, arguments.name)
         file = FileReader(filepath)
     except IOError:
-        print("Unable to open file {}.".format(filepath)) #TODO wtf is this
+        print("Unable to open file " + filepath + ".")
     else:
         continue_reading = True
         while continue_reading:
