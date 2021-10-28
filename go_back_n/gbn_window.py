@@ -3,7 +3,7 @@ import general.shared_constants as shared_constants
 import time
 
 
-PING_TIMEOUT = 1 # Time in seconds until a ping message is sent for connection testing purpouses
+PING_TIMEOUT = 0.5 # Time in seconds until a ping message is sent for connection testing purpouses
 
 class GbnWindow:
     def __init__(self, window_size: int, base_seq_num: int):

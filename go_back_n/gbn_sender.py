@@ -86,5 +86,5 @@ class GbnSender:
                 waited_time = 0
             except queue.Empty:
                 time_until_timeout = 0
-            except BaseException: # There was a Connection Error detected by the OS (or some other kind of unknown error)
+            except ConnectionRefusedError: # There was a Connection Error detected by the OS (or some other kind of unknown error)
                 self.connection_status.connected = False

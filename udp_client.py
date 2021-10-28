@@ -9,10 +9,11 @@ def main():
     sckt.connect(('127.0.0.1', 8080))
     reader = FileReader('text_example.txt')
     msg = reader.read_next_section(1000)
+    r = sckt.recv(1024)
     try:
-        while True:
-            sckt.send(msg)
+        while r != b'':
             msg = reader.read_next_section(constants.UPD_BYTES_PER_FILE_READ)
+            r = sckt.recv(1024)
     except BaseException:
         pass
     sckt.close()
