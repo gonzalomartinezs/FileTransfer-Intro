@@ -12,6 +12,6 @@ def main():
     while r != b'':
         print(r.decode(), end='')
         r = client_sckt.recv(1024)
-
+    client_sckt.close()
 
 main()

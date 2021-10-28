@@ -2,6 +2,7 @@ import threading
 import time
 from queue import Queue
 import queue
+import requests
 
 from go_back_n.gbn_window import GbnWindow
 import general.ack_constants as ack_constants
@@ -67,10 +68,10 @@ class GbnSender:
 
         while (self.keep_running or not checked_all_messages) and self.connection_status.connected:
             before_recv_time = time.time()
-            if self.window.wait_for_sent_packet():
-                ping_packet = self.window.add_packet(b'', add_metadata=True)
-                self.sender.send(ping_packet) # This empty message is used as a PING message, to check for connection status
             try:
+                if self.window.wait_for_sent_packet():
+                    ping_packet = self.window.add_packet(b'', add_metadata=True)
+                    self.sender.send(ping_packet) # This empty message is used as a PING message, to check for connection status
                 if time_until_timeout <= 0:
                     self._resend_all_packets()
                     waited_time = 0
@@ -85,3 +86,5 @@ class GbnSender:
                 waited_time = 0
             except queue.Empty:
                 time_until_timeout = 0
+            except BaseException: # There was a Connection Error detected by the OS (or some other kind of unknown error)
+                self.connection_status.connected = False

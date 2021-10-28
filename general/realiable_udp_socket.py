@@ -10,6 +10,7 @@ import threading
 import random
 import time
 import socket
+import requests
 from general.connection_status import ConnectionStatus
 
 WINDOW_SIZE = 10
@@ -234,4 +235,5 @@ class ReliableUDPSocket:
             except socket.timeout:
                 if (time.time() - time_since_last_msg) > shared_constants.TIME_UNTIL_DISCONNECTION:
                     self.connection_status.connected = False
-
+            except BaseException: # There was a Connection Error detected by the OS (or some other kind of unknown error)
+                    self.connection_status.connected = False
