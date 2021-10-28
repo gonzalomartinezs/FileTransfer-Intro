@@ -1,5 +1,5 @@
 import threading
-from client_thread import ClientThread
+from src.lib.general.client_thread import ClientThread
 
 
 class ClientsAcceptor(threading.Thread):

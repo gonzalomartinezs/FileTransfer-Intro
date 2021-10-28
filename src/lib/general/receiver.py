@@ -1,8 +1,8 @@
 import threading
-import general.ack_constants as ack_constants
-from general.atomic_udp_socket import AtomicUDPSocket
-import general.shared_constants as shared_constants
-from general.connection_status import ConnectionStatus
+from src.lib.general import ack_constants
+from src.lib.general import shared_constants
+from src.lib.general.atomic_udp_socket import AtomicUDPSocket
+from src.lib.general.connection_status import ConnectionStatus
 from queue import Queue
 import queue
 

@@ -1,15 +1,15 @@
 import threading
 import os
-import general.shared_constants as constants
-import general.file_finder as file_finder
-from general.file_reader import FileReader
+from src.lib.general import shared_constants as constants
+from src.lib.general import file_finder
+from src.lib.general.file_reader import FileReader
 
 
 class ClientThread(threading.Thread):
     def __init__(self, peer, arguments):
         threading.Thread.__init__(self)
-        self.peer = peer[0]
-        self.keep_running = True
+        self.peer = peer[0]         # TODO esto no se si jode en udp, porque peer es el retorno del accept
+        self.keep_running = True    # y en tcp es una tupla (socket, address)
         self.storage = arguments.storage
         self.verbose = arguments.verbose
         self.quiet = arguments.quiet
@@ -32,7 +32,6 @@ class ClientThread(threading.Thread):
         self.keep_running = False
 
     def is_dead(self):
-        print("ffofofo")
         return self.keep_running == False
 
     def __recv_file(self, name, filepath):
@@ -71,12 +70,12 @@ class ClientThread(threading.Thread):
             try:
                 file = FileReader(filepath)
             except IOError:
-                print("Unable to open file {}.".format(filepath))
+                print("Unable to open file " + filepath + ".")
             else:
                 continue_reading = True
                 while continue_reading:
                     try:
-                        bytes_read = file.read_next_section(1000) #TODO harcodeao para probar que ande
+                        bytes_read = file.read_next_section(constants.MAX_BUFFER_SIZE)
                         self.peer.send(bytes_read)
                     except EOFError:
                         continue_reading = False

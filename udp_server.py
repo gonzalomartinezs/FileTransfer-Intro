@@ -1,5 +1,5 @@
-from general.realiable_udp_socket import ReliableUDPSocket
-import general.shared_constants as constants
+from src.lib.general.realiable_udp_socket import ReliableUDPSocket, \
+    general as constants
 
 
 def main():
