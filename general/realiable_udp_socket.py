@@ -116,8 +116,11 @@ class ReliableUDPSocket:
 
     def recv(self, buff_size: int) -> bytes:
         if self.connection_status.connected == False:
-            raise ClosedReceiverError
-        return self.receiver.receive()[:buff_size]
+            return b''
+        try:
+            return self.receiver.receive()[:buff_size]
+        except ClosedReceiverError:
+            return b''
 
     # IMPORTANT: DO NOT attempt to reuse the socket after executing close() on
     # it! Otherwhise you will get an exception!

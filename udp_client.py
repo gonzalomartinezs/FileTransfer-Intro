@@ -1,5 +1,6 @@
 from general.realiable_udp_socket import ReliableUDPSocket
 from general.file_reader import FileReader
+from general.receiver import ClosedReceiverError
 import general.shared_constants as constants
 
 

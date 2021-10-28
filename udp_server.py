@@ -8,8 +8,10 @@ def main():
     sckt.listen(constants.MAX_CONNECTIONS)
     client_sckt, _ = sckt.accept()
     sckt.close()
-    while True:
-        print(client_sckt.recv(1024).decode(), end='')
+    r = client_sckt.recv(1024)
+    while r != b'':
+        print(r.decode(), end='')
+        r = client_sckt.recv(1024)
 
 
 main()

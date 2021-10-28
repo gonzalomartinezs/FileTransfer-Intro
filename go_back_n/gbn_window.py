@@ -68,7 +68,7 @@ class GbnWindow:
             self.cv.wait(timeout = PING_TIMEOUT)
             time_waited = time.time() - base_time
         self.mutex.release()
-        return time_waited < PING_TIMEOUT
+        return time_waited > PING_TIMEOUT
 
     def close(self):
         self.mutex.acquire()
