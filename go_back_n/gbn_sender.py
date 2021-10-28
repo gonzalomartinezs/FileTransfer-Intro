@@ -7,6 +7,7 @@ from go_back_n.gbn_window import GbnWindow
 import general.ack_constants as ack_constants
 import general.shared_constants as shared_constants
 from general.atomic_udp_socket import AtomicUDPSocket
+from general.connection_status import ConnectionStatus
 
 class InvalidDestinationError(Exception):
     pass
@@ -26,11 +27,13 @@ class GbnSender:
             sender: AtomicUDPSocket,
             receiver: Queue,
             window_size: int,
-            base_seq_num: int):
+            base_seq_num: int,
+            connection_status: ConnectionStatus):
         self.window = GbnWindow(window_size, base_seq_num)
         self.sender = sender
         self.receiver = receiver
         self.keep_running = True
+        self.connection_status = connection_status
         self.ack_thread = threading.Thread(
             target=self._confirm_packets, daemon=True)
         self.ack_thread.start()
@@ -62,9 +65,11 @@ class GbnSender:
         waited_time = 0
         time_until_timeout = base_timeout
 
-        while self.keep_running or not checked_all_messages:
+        while (self.keep_running or not checked_all_messages) and self.connection_status.connected:
             before_recv_time = time.time()
-            self.window.wait_for_sent_packet()
+            if self.window.wait_for_sent_packet():
+                ping_packet = self.window.add_packet(b'', add_metadata=True)
+                self.sender.send(ping_packet) # This empty message is used as a PING message, to check for connection status
             try:
                 if time_until_timeout <= 0:
                     self._resend_all_packets()

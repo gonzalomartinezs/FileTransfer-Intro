@@ -2,7 +2,7 @@ from general import ack_constants, shared_constants
 from general.accepted_connections import AcceptedConnections
 from go_back_n.gbn_sender import GbnSender
 from stop_and_wait.sw_sender import StopAndWaitSender
-from general.receiver import Receiver
+from general.receiver import ClosedReceiverError, Receiver
 from general.atomic_udp_socket import AtomicUDPSocket
 from queue import Queue
 from enum import Enum
@@ -10,6 +10,7 @@ import threading
 import random
 import time
 import socket
+from general.connection_status import ConnectionStatus
 
 WINDOW_SIZE = 10
 
@@ -22,7 +23,6 @@ class ReliableUDPSocketType(Enum):
     CLIENT = 1
     SERVER_LISTENER = 2
     SERVER_HANDLER = 3
-
 
 class ReliableUDPSocket:
     accepted_connections = AcceptedConnections() # Used by the listeners and handlers
@@ -110,9 +110,13 @@ class ReliableUDPSocket:
         return self.new_connections_queue.get()
 
     def send(self, msg: bytes):
+        if self.connection_status.connected == False:
+            raise ClosedReceiverError
         self.sender.send(msg)
 
     def recv(self, buff_size: int) -> bytes:
+        if self.connection_status.connected == False:
+            raise ClosedReceiverError
         return self.receiver.receive()[:buff_size]
 
     # IMPORTANT: DO NOT attempt to reuse the socket after executing close() on
@@ -124,6 +128,7 @@ class ReliableUDPSocket:
             self.keep_running = False
             self.thread.join()
             self.sckt.close()
+            self.connection_status.connected = False
         elif self.type == ReliableUDPSocketType.SERVER_HANDLER:
             self.sender.close()
             self.receiver.close()
@@ -131,6 +136,7 @@ class ReliableUDPSocket:
             self.thread.join()
             self.sckt.close()
             ReliableUDPSocket.accepted_connections.remove_connection(self.peer_addr)
+            self.connection_status.connected = False
         elif self.type == ReliableUDPSocketType.SERVER_LISTENER:
             self.keep_running = False
             self.thread.join()
@@ -149,17 +155,19 @@ class ReliableUDPSocket:
                                connection_seq_num: int):
         # Now we can only send and receive packets to and from this address
         self.sckt.connect(dest_addr)
+        self.connection_status = ConnectionStatus()
         self.peer_addr = dest_addr
-        self.receiver = Receiver(self.sckt, self.msg_queue, connection_seq_num)
+        self.receiver = Receiver(self.sckt, self.msg_queue, connection_seq_num, self.connection_status)
         if (self.use_goback_n):
             self.sender = GbnSender(
                 self.sckt,
                 self.ack_queue,
                 WINDOW_SIZE,
-                base_seq_num)
+                base_seq_num,
+                self.connection_status)
         else:
             self.sender = StopAndWaitSender(
-                self.sckt, self.ack_queue, base_seq_num)
+                self.sckt, self.ack_queue, base_seq_num, self.connection_status)
         self.thread = threading.Thread(
             target=self._receive_messages, daemon=True)
         self.thread.start()
@@ -204,9 +212,10 @@ class ReliableUDPSocket:
         # TODO ver si hay una alternativa a un timeout para el tema del close,
         # pero creo que no hay mucha
         self.sckt.settimeout(0.5)
-        while self.keep_running:
+        while self.keep_running and self.connection_status.connected:
             try:
                 packet = self.sckt.recv(shared_constants.MAX_BUFFER_SIZE)
+                time_since_last_msg = time.time()
                 packet_type = packet[0]
                 # We remove the packet type before redirecting it
                 packet = packet[1:]
@@ -220,4 +229,6 @@ class ReliableUDPSocket:
                         (len(packet) == 2):
                     self.msg_queue.put(packet)
             except socket.timeout:
-                pass
+                if (time.time() - time_since_last_msg) > shared_constants.TIME_UNTIL_DISCONNECTION:
+                    self.connection_status.connected = False
+

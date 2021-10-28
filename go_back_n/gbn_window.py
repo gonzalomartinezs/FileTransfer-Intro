@@ -1,6 +1,9 @@
 import threading
 import general.shared_constants as shared_constants
+import time
 
+
+PING_TIMEOUT = 1 # Time in seconds until a ping message is sent for connection testing purpouses
 
 class GbnWindow:
     def __init__(self, window_size: int, base_seq_num: int):
@@ -56,11 +59,16 @@ class GbnWindow:
         self.mutex.release()
         return ret_val
 
-    def wait_for_sent_packet(self):
+    # Returns true if it has to send a PING message, false otherwise
+    def wait_for_sent_packet(self) -> bool:
         self.mutex.acquire()
-        while ((len(self.packet_buffer) == 0) and not self.closed):
-            self.cv.wait()
+        base_time = time.time()
+        time_waited = 0
+        while (len(self.packet_buffer) == 0) and (time_waited < PING_TIMEOUT) and not self.closed:
+            self.cv.wait(timeout = PING_TIMEOUT)
+            time_waited = time.time() - base_time
         self.mutex.release()
+        return time_waited < PING_TIMEOUT
 
     def close(self):
         self.mutex.acquire()

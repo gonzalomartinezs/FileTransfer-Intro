@@ -2,12 +2,14 @@ import threading
 import general.ack_constants as ack_constants
 from general.atomic_udp_socket import AtomicUDPSocket
 import general.shared_constants as shared_constants
+from general.connection_status import ConnectionStatus
 from queue import Queue
+import queue
 
 PACKET_QUEUE_SIZE = 5
 
 
-class ClosedSocketError(Exception):
+class ClosedReceiverError(Exception):
     pass
 
 class Receiver:
@@ -15,20 +17,27 @@ class Receiver:
             self,
             sender: AtomicUDPSocket,
             receiver: Queue,
-            expected_seq_num: int):
+            expected_seq_num: int,
+            connection_status: ConnectionStatus):
         self.sender = sender
         self.receiver = receiver
         self.expected_seq_num = expected_seq_num
         self.received_packets_queue = Queue(PACKET_QUEUE_SIZE)
         self.keep_running = True
+        self.connection_status = connection_status
         self.ack_thread = threading.Thread(
             target=self._receive_packets, daemon=True)
         self.ack_thread.start()
 
     def receive(self) -> bytes:
         if not self.keep_running:
-            raise ClosedSocketError()
-        return self.received_packets_queue.get()
+            raise ClosedReceiverError()
+        while self.connection_status.connected == True:
+            try:
+                return self.received_packets_queue.get(timeout=shared_constants.TIME_UNTIL_DISCONNECTION)
+            except queue.Empty:
+                pass
+        raise ClosedReceiverError()
 
     def close(self):
         self.keep_running = False
@@ -39,7 +48,7 @@ class Receiver:
     # PRIVATE
     def _receive_packets(self):
         packet = self.receiver.get()
-        while (self.keep_running):
+        while self.keep_running and self.connection_status.connected:
             packet_seq_number = int.from_bytes(
                 packet[:2], byteorder='big', signed=False)
             if (packet_seq_number == self.expected_seq_num):

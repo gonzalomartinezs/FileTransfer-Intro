@@ -12,7 +12,10 @@ MSG_TYPE_NUM = 67
 SYN_TYPE_NUM = 50
 OK_TYPE_NUM = 47  # This indicates an accepted SYN request
 
+
 MAX_CONNECTIONS = 5
 UPD_BYTES_PER_FILE_READ = 1000
 
 UDP_USE_GO_BACK_N = True
+
+TIME_UNTIL_DISCONNECTION = 30 # Max time in seconds that can pass between received messages until with considered the connection as lost
