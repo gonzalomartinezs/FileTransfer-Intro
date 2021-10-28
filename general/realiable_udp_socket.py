@@ -19,6 +19,8 @@ WINDOW_SIZE = 10
 class SocketAlreadySetupError(Exception):
     pass
 
+class ClosedSocketError(Exception):
+    pass
 
 class ReliableUDPSocketType(Enum):
     CLIENT = 1
@@ -108,11 +110,14 @@ class ReliableUDPSocket:
         self.thread.start()
 
     def accept(self):  # TODO indicar que esto retorna un (ReliableUDPSocket, Addr)
-        return self.new_connections_queue.get()
+        c = self.new_connections_queue.get()
+        if c == None:
+            raise ClosedSocketError
+        return c
 
     def send(self, msg: bytes):
         if self.connection_status.connected == False:
-            raise ClosedReceiverError
+            raise ClosedSocketError
         self.sender.send(msg)
 
     def recv(self, buff_size: int) -> bytes:
@@ -145,6 +150,7 @@ class ReliableUDPSocket:
             self.keep_running = False
             self.thread.join()
             self.sckt.close()
+            self.new_connections_queue.put(None) # Avoids getting locked in the accept method
         # If type == None then there is nothing to be done so no error is
         # raised
 

@@ -20,7 +20,7 @@ class ClientsAcceptor(threading.Thread):
                 self.clients.append(client_thread)
                 self.clients[-1].start()
 
-            except Exception:
+            except BaseException:
                 pass
 
     def stop(self):

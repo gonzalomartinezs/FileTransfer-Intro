@@ -41,10 +41,8 @@ def upload_file(arguments, cl_socket):
             except EOFError:
                 continue_reading = False
                 print("File successfully uploaded.")
-            except BaseException:
                 continue_reading = False
                 print("An error occurred while uploading the file.")
-        cl_socket.send(b'FIN')
         file.close()
 
 
@@ -69,7 +67,7 @@ def download_file(arguments, cl_socket):
     file = open(filepath, "wb")
     received = cl_socket.recv(constants.MAX_BUFFER_SIZE)
 
-    while received != b'FIN':
+    while received != b'':
         file.write(received)
         received = cl_socket.recv(constants.MAX_BUFFER_SIZE)
 
@@ -77,7 +75,8 @@ def download_file(arguments, cl_socket):
 
 
 args = client_parser.parse_arguments()
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+client_socket = ReliableUDPSocket(use_goback_n=True)
 
 try:
     client_socket.connect((args.host, args.port))

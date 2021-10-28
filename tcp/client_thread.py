@@ -8,8 +8,7 @@ from general.file_reader import FileReader
 class ClientThread(threading.Thread):
     def __init__(self, peer, arguments):
         threading.Thread.__init__(self)
-        #self.peer = peer[0]
-        self.peer = peer
+        self.peer = peer[0]
         self.keep_running = True
         self.storage = arguments.storage
         self.verbose = arguments.verbose
@@ -31,7 +30,6 @@ class ClientThread(threading.Thread):
 
     def stop(self):
         self.keep_running = False
-        self.peer.close()
 
     def is_dead(self):
         print("ffofofo")
@@ -54,7 +52,7 @@ class ClientThread(threading.Thread):
         print("Saving " + name + " in " + self.storage)
 
         received = self.peer.recv(constants.MAX_BUFFER_SIZE)
-        while received != b'FIN':
+        while received != b'':
             file.write(received)
             received = self.peer.recv(constants.MAX_BUFFER_SIZE)
 
@@ -86,5 +84,4 @@ class ClientThread(threading.Thread):
                     except BaseException:
                         continue_reading = False
                         print("An error occurred while sending the file.")
-                self.peer.send(b'FIN')
                 file.close()
