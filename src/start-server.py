@@ -9,8 +9,13 @@ import lib.general.shared_constants as constants
 
 args = parse_arguments()
 
-sv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#sv_socket = ReliableUDPSocket(use_goback_n=True)
+if args.mode == "tcp":
+    sv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+elif args.mode == "gbn":
+    sv_socket = ReliableUDPSocket(use_goback_n=True)
+else:
+    sv_socket = ReliableUDPSocket(use_goback_n=False)
+
 sv_socket.bind((args.host, args.port))
 sv_socket.listen(constants.MAX_CONNECTIONS)
 
@@ -23,6 +28,7 @@ while user_input != "q":
     user_input = input("Para finalizar ingrese la tecla 'q' \n")
 
 acceptor.stop()
-sv_socket.shutdown(socket.SHUT_RDWR)
+if args.mode == "tcp":
+    sv_socket.shutdown(socket.SHUT_RDWR)
 sv_socket.close()
 acceptor.join()

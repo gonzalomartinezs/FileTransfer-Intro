@@ -33,6 +33,10 @@ def parse_arguments(mode):
         cl_parser.add_argument("-s", dest="source", help="source file path", default='./')
 
     cl_parser.add_argument("-n", dest="name", help="file name", required=True)
+    cl_parser.add_argument("-m", dest="mode", help="socket type used "
+                                                   "TCP, GBN: UDP GoBackN"
+                                                   ", SW: UDP Stop&Wait",
+                           choices=["tcp", "gbn", "sw"], default="tcp")
 
     # Argumentos opcionales
     __add_optional_arguments(cl_parser)

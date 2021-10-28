@@ -44,8 +44,13 @@ def download_file(arguments, cl_socket):
 
 
 args = client_parser.parse_arguments("download")
-client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#client_socket = ReliableUDPSocket(use_goback_n=True)
+
+if args.mode == "tcp":
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+elif args.mode == "gbn":
+    client_socket = ReliableUDPSocket(use_goback_n=True)
+else:
+    client_socket = ReliableUDPSocket(use_goback_n=False)
 
 try:
     client_socket.connect((args.host, args.port))

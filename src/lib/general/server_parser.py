@@ -15,6 +15,10 @@ def parse_arguments():
     sv_parser.add_argument("-H", dest='host', help="service IP address", required=True)
     sv_parser.add_argument("-p", dest='port', help="service port", type=int, required=True)
     sv_parser.add_argument("-s", dest='storage', help="storage dir path", type=str, default='./')
+    sv_parser.add_argument("-m", dest="mode", help="socket type used "
+                                                   "TCP, GBN: UDP GoBackN"
+                                                   ", SW: UDP Stop&Wait",
+                           choices=["tcp", "gbn", "sw"], default="tcp")
 
     # Argumentos opcionales
     group = sv_parser.add_mutually_exclusive_group()
