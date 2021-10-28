@@ -1,15 +1,15 @@
 import threading
 import os
-from src.lib.general import shared_constants as constants
-from src.lib.general import file_finder
-from src.lib.general.file_reader import FileReader
+from lib.general import shared_constants as constants
+from lib.general import file_finder
+from lib.general.file_reader import FileReader
 
 
 class ClientThread(threading.Thread):
     def __init__(self, peer, arguments):
         threading.Thread.__init__(self)
-        self.peer = peer[0]         # TODO esto no se si jode en udp, porque peer es el retorno del accept
-        self.keep_running = True    # y en tcp es una tupla (socket, address)
+        self.peer = peer[0]
+        self.keep_running = True
         self.storage = arguments.storage
         self.verbose = arguments.verbose
         self.quiet = arguments.quiet

@@ -1,16 +1,16 @@
-from src.lib.general import ack_constants, shared_constants
-from src.lib.general.accepted_connections import AcceptedConnections
-from src.lib.go_back_n.gbn_sender import GbnSender
-from src.lib.stop_and_wait.sw_sender import StopAndWaitSender
-from src.lib.general.receiver import ClosedReceiverError, Receiver
-from src.lib.general.atomic_udp_socket import AtomicUDPSocket
+from lib.general import ack_constants, shared_constants
+from lib.general.accepted_connections import AcceptedConnections
+from lib.go_back_n.gbn_sender import GbnSender
+from lib.stop_and_wait.sw_sender import StopAndWaitSender
+from lib.general.receiver import ClosedReceiverError, Receiver
+from lib.general.atomic_udp_socket import AtomicUDPSocket
 from queue import Queue
 from enum import Enum
 import threading
 import random
 import time
 import socket
-from src.lib.general.connection_status import ConnectionStatus
+from lib.general.connection_status import ConnectionStatus
 
 WINDOW_SIZE = 10
 
@@ -84,7 +84,7 @@ class ReliableUDPSocket:
                     time_until_timeout = base_timeout
                 self.sckt.settimeout(time_until_timeout)
                 packet, r_addr = self.sckt.recvfrom(
-                    shared_constants.MAX_BUFFER_SIZE)
+                    2**16-1)
                 waited_time += time.time() - before_recv_time
                 time_until_timeout = base_timeout - waited_time
                 if (r_addr[0] == addr[0]) and (r_addr[1] != addr[1]) and (
@@ -190,7 +190,7 @@ class ReliableUDPSocket:
         while self.keep_running:
             try:
                 packet, addr = self.sckt.recvfrom(
-                    shared_constants.MAX_BUFFER_SIZE)
+                    2**16 - 1)
                 if self.new_connections_queue.full():
                     # We ignore the connection request if the queue is full
                     continue
@@ -225,7 +225,7 @@ class ReliableUDPSocket:
         self.sckt.settimeout(0.5)
         while self.keep_running and self.connection_status.connected:
             try:
-                packet = self.sckt.recv(shared_constants.MAX_BUFFER_SIZE)
+                packet = self.sckt.recv(2**16-1) #TODO por ahora con esto agarro el tamanio maximo
                 if 90 > random.randint(0, 100):
                     continue
                 time_since_last_msg = time.time()

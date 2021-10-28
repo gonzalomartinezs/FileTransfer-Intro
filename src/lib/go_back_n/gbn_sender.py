@@ -3,12 +3,12 @@ import time
 from queue import Queue
 import queue
 
-from src.lib.go_back_n.gbn_window import GbnWindow
+from lib.go_back_n.gbn_window import GbnWindow
 
-from src.lib.general import ack_constants
-from src.lib.general import shared_constants
-from src.lib.general.atomic_udp_socket import AtomicUDPSocket
-from src.lib.general.connection_status import ConnectionStatus
+from lib.general import ack_constants
+from lib.general import shared_constants
+from lib.general.atomic_udp_socket import AtomicUDPSocket
+from lib.general.connection_status import ConnectionStatus
 
 
 class InvalidDestinationError(Exception):
@@ -42,8 +42,7 @@ class GbnSender:
 
     def send(self, message: bytes, add_metadata: bool = True):
         if self.keep_running:
-            if ((len(message) + shared_constants.METADATA_SIZE)
-                    <= shared_constants.MAX_BUFFER_SIZE):
+            if (len(message) <= shared_constants.MAX_BUFFER_SIZE):
                 packet = self.window.add_packet(message, add_metadata)
                 self.sender.send(packet)
             else:

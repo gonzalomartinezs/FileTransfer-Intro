@@ -1,7 +1,7 @@
 import threading
-from src.lib.general import shared_constants
+from lib.general import shared_constants
 import time
-from general.connection_status import ConnectionStatus
+from lib.general.connection_status import ConnectionStatus
 
 
 PING_TIMEOUT = 0.5 # Time in seconds until a ping message is sent for connection testing purpouses

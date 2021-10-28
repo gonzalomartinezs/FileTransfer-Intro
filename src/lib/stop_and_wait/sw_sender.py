@@ -2,10 +2,10 @@ import time
 import sys
 sys.path.insert(1, '../../../')  # To fix library includes
 
-from src.lib.general.atomic_udp_socket import AtomicUDPSocket
-from src.lib.general import ack_constants
-from src.lib.general import shared_constants
-from src.lib.general.connection_status import ConnectionStatus
+from lib.general.atomic_udp_socket import AtomicUDPSocket
+from lib.general import ack_constants
+from lib.general import shared_constants
+from lib.general.connection_status import ConnectionStatus
 from queue import Queue
 import queue
 

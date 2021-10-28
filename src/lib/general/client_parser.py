@@ -1,6 +1,6 @@
 import argparse
-from src.lib.general import shared_constants as constants
-from src.lib.general.file_finder import dir_exists
+from lib.general import shared_constants as constants
+from lib.general.file_finder import dir_exists
 
 
 def __add_optional_arguments(parser):
