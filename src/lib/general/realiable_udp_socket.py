@@ -1,17 +1,16 @@
-from general import ack_constants, shared_constants
-from general.accepted_connections import AcceptedConnections
-from go_back_n.gbn_sender import GbnSender
-from stop_and_wait.sw_sender import StopAndWaitSender
-from general.receiver import ClosedReceiverError, Receiver
-from general.atomic_udp_socket import AtomicUDPSocket
+from src.lib.general import ack_constants, shared_constants
+from src.lib.general.accepted_connections import AcceptedConnections
+from src.lib.go_back_n.gbn_sender import GbnSender
+from src.lib.stop_and_wait.sw_sender import StopAndWaitSender
+from src.lib.general.receiver import ClosedReceiverError, Receiver
+from src.lib.general.atomic_udp_socket import AtomicUDPSocket
 from queue import Queue
 from enum import Enum
 import threading
 import random
 import time
 import socket
-import requests
-from general.connection_status import ConnectionStatus
+from src.lib.general.connection_status import ConnectionStatus
 
 WINDOW_SIZE = 10
 
@@ -57,7 +56,7 @@ class ReliableUDPSocket:
         waited_time = 0
         time_until_timeout = base_timeout
         self.sckt.sendto(
-                shared_constants.SYN_TYPE_NUM.to_bytes(
+            shared_constants.SYN_TYPE_NUM.to_bytes(
                 1,
                 byteorder='big',
                 signed=False) +
@@ -84,7 +83,8 @@ class ReliableUDPSocket:
                     waited_time = 0
                     time_until_timeout = base_timeout
                 self.sckt.settimeout(time_until_timeout)
-                packet, r_addr = self.sckt.recvfrom(shared_constants.MAX_BUFFER_SIZE)
+                packet, r_addr = self.sckt.recvfrom(
+                    shared_constants.MAX_BUFFER_SIZE)
                 waited_time += time.time() - before_recv_time
                 time_until_timeout = base_timeout - waited_time
                 if (r_addr[0] == addr[0]) and (r_addr[1] != addr[1]) and (

@@ -1,7 +1,6 @@
-from general.realiable_udp_socket import ReliableUDPSocket
-from general.file_reader import FileReader
-from general.receiver import ClosedReceiverError
-import general.shared_constants as constants
+from src.lib.general.realiable_udp_socket import ReliableUDPSocket, \
+    general as constants
+from src.lib.general.file_reader import FileReader
 
 
 def main():

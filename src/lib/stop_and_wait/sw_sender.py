@@ -1,12 +1,11 @@
-import socket
 import time
 import sys
-sys.path.insert(1, '../')  # To fix library includes
+sys.path.insert(1, '../../../')  # To fix library includes
 
-import general.atomic_udp_socket as AtomicUDPSocket
-from general.connection_status import ConnectionStatus
-import general.ack_constants as ack_constants
-import general.shared_constants as shared_constants
+from src.lib.general.atomic_udp_socket import AtomicUDPSocket
+from src.lib.general import ack_constants
+from src.lib.general import shared_constants
+from src.lib.general.connection_status import ConnectionStatus
 from queue import Queue
 import queue
 
@@ -85,7 +84,7 @@ class StopAndWaitSender:
                         # If we received a delayed ack from a previous package
                         # we ignore it
 
-                
+
 
             except queue.Empty:
                 """ self.sckt.send(message)  # Resend message if timeout occurred

@@ -1,6 +1,6 @@
 import argparse
-import general.shared_constants as constants
-from general.file_finder import dir_exists
+from src.lib.general import shared_constants as constants
+from src.lib.general.file_finder import dir_exists
 
 
 # Retorna un objeto contenedor con los atributos command, host, port, storage,

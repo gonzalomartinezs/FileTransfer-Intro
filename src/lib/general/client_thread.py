@@ -1,8 +1,8 @@
 import threading
 import os
-import general.shared_constants as constants
-import general.file_finder as file_finder
-from general.file_reader import FileReader
+from src.lib.general import shared_constants as constants
+from src.lib.general import file_finder
+from src.lib.general.file_reader import FileReader
 
 
 class ClientThread(threading.Thread):

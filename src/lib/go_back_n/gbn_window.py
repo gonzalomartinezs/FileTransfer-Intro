@@ -1,5 +1,5 @@
 import threading
-import general.shared_constants as shared_constants
+from src.lib.general import shared_constants
 import time
 
 
@@ -85,7 +85,8 @@ class GbnWindow:
         aux = num - self.base
         if (aux < 0):
             acknowledged_packets = (
-                (shared_constants.MAX_SEQ_NUM + 1) - self.base) + (num + 1)
+                                           (
+                                                       shared_constants.MAX_SEQ_NUM + 1) - self.base) + (num + 1)
         else:
             acknowledged_packets = aux + 1
 
