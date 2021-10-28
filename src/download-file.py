@@ -43,7 +43,7 @@ def download_file(arguments, cl_socket):
     file.close()
 
 
-args = client_parser.parse_arguments()
+args = client_parser.parse_arguments("download")
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 #client_socket = ReliableUDPSocket(use_goback_n=True)
 
