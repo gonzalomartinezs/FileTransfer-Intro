@@ -115,6 +115,7 @@ class ReliableUDPSocket:
             raise ClosedSocketError
         return c
 
+    # Raises ConnectionRefusedError if the connection was closed
     def send(self, msg: bytes):
         if self.connection_status.connected == False:
             raise ClosedSocketError
@@ -225,6 +226,8 @@ class ReliableUDPSocket:
         while self.keep_running and self.connection_status.connected:
             try:
                 packet = self.sckt.recv(shared_constants.MAX_BUFFER_SIZE)
+                if 90 > random.randint(0, 100):
+                    continue
                 time_since_last_msg = time.time()
                 packet_type = packet[0]
                 # We remove the packet type before redirecting it

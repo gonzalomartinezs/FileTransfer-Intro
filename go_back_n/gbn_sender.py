@@ -30,7 +30,7 @@ class GbnSender:
             window_size: int,
             base_seq_num: int,
             connection_status: ConnectionStatus):
-        self.window = GbnWindow(window_size, base_seq_num)
+        self.window = GbnWindow(window_size, base_seq_num, connection_status)
         self.sender = sender
         self.receiver = receiver
         self.keep_running = True

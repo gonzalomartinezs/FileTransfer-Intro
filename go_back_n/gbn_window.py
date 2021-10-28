@@ -1,12 +1,14 @@
 import threading
+from general import connection_status
 import general.shared_constants as shared_constants
 import time
+from general.connection_status import ConnectionStatus
 
 
 PING_TIMEOUT = 0.5 # Time in seconds until a ping message is sent for connection testing purpouses
 
 class GbnWindow:
-    def __init__(self, window_size: int, base_seq_num: int):
+    def __init__(self, window_size: int, base_seq_num: int, connection_status: ConnectionStatus):
         self.mutex = threading.Lock()
         self.window_size = window_size
         self.base = base_seq_num
@@ -14,11 +16,15 @@ class GbnWindow:
         self.packet_buffer = []
         self.closed = False
         self.cv = threading.Condition(self.mutex)
+        self.connection_status = connection_status
 
     def add_packet(self, packet: bytes, add_metadata: bool):
         self.mutex.acquire()
-        while self._is_full():
-            self.cv.wait()
+        while self._is_full() and self.connection_status.connected:
+            self.cv.wait(timeout=PING_TIMEOUT)
+        if not self.connection_status.connected:
+            self.mutex.release()
+            raise ConnectionRefusedError
         if add_metadata:
             packet = (shared_constants.MSG_TYPE_NUM).to_bytes(1, byteorder='big') + (self.next_seq_num).to_bytes(2, byteorder='big') + packet
         self.packet_buffer.append(packet)
@@ -26,7 +32,7 @@ class GbnWindow:
         self.cv.notify_all()
         self.mutex.release()
         return packet
-    
+
 
     # Returns True if there are not any messages whose acknowledge was not
     # received, otherwise returns False
