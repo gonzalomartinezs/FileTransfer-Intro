@@ -1,4 +1,4 @@
-# import socket
+import socket
 import os
 import sys
 
@@ -87,9 +87,7 @@ except ConnectionRefusedError:
 
 if args.command == "upload-file":
     upload_file(args, client_socket)
-if args.command == "download-file":
-    download_file(args, client_socket)
 else:
-    print("Invalid command. Please insert either download-file or upload-file")
+    download_file(args, client_socket)
 
 client_socket.close()

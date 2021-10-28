@@ -1,4 +1,4 @@
-#import socket
+import socket
 import sys
 sys.path.insert(1, '../')  # To fix library includes
 
@@ -21,9 +21,6 @@ while user_input != "q":
     user_input = input("Para finalizar ingrese la tecla 'q' \n")
 
 acceptor.stop()
-
-if len(acceptor.clients) > 0:
-    sv_socket.shutdown(socket.SHUT_RDWR)
-
+sv_socket.shutdown(socket.SHUT_RDWR)
 sv_socket.close()
 acceptor.join()

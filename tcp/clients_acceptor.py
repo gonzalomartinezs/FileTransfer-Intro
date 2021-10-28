@@ -21,7 +21,7 @@ class ClientsAcceptor(threading.Thread):
                 self.clients[-1].start()
 
             except Exception:
-                print("Agarre un exception")
+                pass
 
     def stop(self):
         self.keep_running = False
