@@ -2,7 +2,7 @@ import socket
 import threading
 import random
 
-from src.lib.general.constants import PACKET_LOSS_PROBABILITY
+from lib.general.constants import PACKET_LOSS_PROBABILITY
 
 class AtomicUDPSocket:
     def __init__(self):
