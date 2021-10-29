@@ -40,7 +40,7 @@ class ClientThread(threading.Thread):
             message = "1"
         else:
             message = "0"
-        self.peer.send(message.encode())
+        self.peer.sendall(message.encode())
 
         if file_exists:
             end_exchange = self.peer.recv(constants.MAX_BUFFER_SIZE)
@@ -68,7 +68,7 @@ class ClientThread(threading.Thread):
         else:
             message = str(os.path.getsize(filepath))
 
-        self.peer.send(message.encode())
+        self.peer.sendall(message.encode())
 
         if file_exists:
             try:
@@ -81,7 +81,8 @@ class ClientThread(threading.Thread):
                 while continue_reading:
                     try:
                         bytes_read = file.read_next_section(constants.MAX_BUFFER_SIZE)
-                        bytes_sent += self.peer.send(bytes_read)
+                        self.peer.sendall(bytes_read)
+                        bytes_sent += len(bytes_read)
                     except EOFError:
                         continue_reading = False
                         if bytes_sent == os.path.getsize(filepath):
@@ -89,7 +90,7 @@ class ClientThread(threading.Thread):
                         else:
                             print("An error occurred while sending the file."
                                   "Some bytes were not delivered.")
-                    except BaseException:
-                        continue_reading = False
-                        print("An error occurred while sending the file.")
+                    # except BaseException:
+                    #     continue_reading = False
+                    #     print("An error occurred while sending the file.")
                 file.close()

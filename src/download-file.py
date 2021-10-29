@@ -12,7 +12,7 @@ from lib.general.realiable_udp_socket import ReliableUDPSocket
 
 def download_file(arguments, cl_socket):
     msg = "1," + arguments.name + ",0"
-    cl_socket.send(msg.encode())
+    cl_socket.sendall(msg.encode())
 
     filesize = int(cl_socket.recv(constants.MAX_BUFFER_SIZE).decode())
     if filesize == 0:

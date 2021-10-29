@@ -15,7 +15,7 @@ def upload_file(arguments, cl_socket):
     filesize = os.path.getsize(filepath)
 
     msg = "0," + arguments.name + "," + str(filesize)
-    cl_socket.send(msg.encode())
+    cl_socket.sendall(msg.encode())
 
     response = int(cl_socket.recv(constants.MAX_BUFFER_SIZE).decode())
     if response == 1:
@@ -24,10 +24,10 @@ def upload_file(arguments, cl_socket):
         while option != "y" and option != "n":
             option = input("Do you want to override it? (y/n)")
         if option == "n":
-            cl_socket.send("1".encode())
+            cl_socket.sendall("1".encode())
             return
         else:
-            cl_socket.send("0".encode())
+            cl_socket.sendall("0".encode())
 
     try:
         file = FileReader(filepath)
@@ -39,7 +39,8 @@ def upload_file(arguments, cl_socket):
         while continue_reading:
             try:
                 bytes_read = file.read_next_section(constants.MAX_BUFFER_SIZE)
-                sent += cl_socket.send(bytes_read)
+                cl_socket.sendall(bytes_read)
+                sent += len(bytes_read)
                 print("Already sent {}/{} bytes.".format(sent, filesize))
             except EOFError:
                 continue_reading = False
