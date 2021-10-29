@@ -38,7 +38,8 @@ def download_file(arguments, cl_socket):
                 break  # This avoids waiting for more time in the recv that has an already closed connection
             received = cl_socket.recv(constants.MAX_BUFFER_SIZE)
             bytes_received += len(received)
-            print("Downloaded {}/{} bytes".format(bytes_received, filesize), " ({}%)".format(received / filesize))
+            print("Downloaded {}/{} bytes".format(bytes_received, filesize), end="")
+            print(" ({}%)".format(int(100* bytes_received / filesize)))
     except Exception:
         print("Something went wrong while downloading the file.")
 
