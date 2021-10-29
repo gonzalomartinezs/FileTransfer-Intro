@@ -24,7 +24,6 @@ acceptor.start()
 
 user_input = ''
 while user_input != "q":
-    print("Hay " + str(len(acceptor.clients)) + " clientes")
     user_input = input("Para finalizar ingrese la tecla 'q' \n")
 
 acceptor.stop()

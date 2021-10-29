@@ -14,11 +14,12 @@ class ClientsAcceptor(threading.Thread):
         while self.keep_running == True:
             try:
                 self.__release_dead_clients()
-
                 peer = self.socket.accept()
+                
                 client_thread = ClientThread(peer, self.args)
                 self.clients.append(client_thread)
                 self.clients[-1].start()
+                print("Cantidad de clientes: " + str(len(self.clients)))
 
             except BaseException:
                 pass
@@ -31,6 +32,7 @@ class ClientsAcceptor(threading.Thread):
             if client.is_dead():
                 client.join()
                 self.clients.remove(client)
+                print("Cantidad de clientes: " + str(len(self.clients)))
 
     def __del__(self):
         for client in self.clients:
