@@ -30,7 +30,8 @@ class AtomicUDPSocket:
     def send(self, msg: bytes):
         self.send_mutex.acquire()
         try:
-            self.sckt.send(msg)
+            if PACKET_LOSS_PROBABILITY <= random.randint(0, 100): # This lets us simulate packet loss
+                self.sckt.sendto(msg)
             self.send_mutex.release()
         # There was a Connection Error detected by the OS (or some other kind
         # of unknown error)
