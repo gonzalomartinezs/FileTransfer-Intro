@@ -53,6 +53,8 @@ class ClientThread(threading.Thread):
         received = self.peer.recv(MAX_BUFFER_SIZE)
         bytes_received = len(received)
         while received != b'' and bytes_received <= int(size):
+            if bytes_received == int(size):
+                break # This avoids waiting for more time in the recv that has an already closed connection
             file.write(received)
             received = self.peer.recv(MAX_BUFFER_SIZE)
             bytes_received += len(received)
