@@ -4,7 +4,7 @@ import sys
 
 sys.path.insert(1, '/')  # To fix library includes
 
-import lib.general.shared_constants as constants
+import lib.general.constants as constants
 from lib.general import client_parser
 from lib.general.file_reader import FileReader
 from lib.general.realiable_udp_socket import ReliableUDPSocket

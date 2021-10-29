@@ -1,5 +1,5 @@
 import argparse
-from lib.general import shared_constants as constants
+from lib.general.constants import *
 from lib.general.file_finder import dir_exists
 
 
@@ -30,7 +30,7 @@ def parse_arguments():
     # Pasa los argumentos introducidos a un objeto contenedor
     args = sv_parser.parse_args()
 
-    if args.port < constants.MIN_PORT or args.port > constants.MAX_PORT:
+    if args.port < MIN_PORT or args.port > MAX_PORT:
         sv_parser.error("Port value must be in between [1024-65535]")
 
     if not dir_exists(args.storage):

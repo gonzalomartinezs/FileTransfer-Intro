@@ -1,13 +1,9 @@
 import threading
-from lib.general import ack_constants
-from lib.general import shared_constants
+from lib.general.constants import *
 from lib.general.atomic_udp_socket import AtomicUDPSocket
 from lib.general.connection_status import ConnectionStatus
 from queue import Queue
 import queue
-
-PACKET_QUEUE_SIZE = 5
-
 
 class ClosedReceiverError(Exception):
     pass
@@ -34,7 +30,7 @@ class Receiver:
             raise ClosedReceiverError()
         while self.connection_status.connected == True:
             try:
-                return self.received_packets_queue.get(timeout=shared_constants.TIME_UNTIL_DISCONNECTION)
+                return self.received_packets_queue.get(timeout=TIME_UNTIL_DISCONNECTION)
             except queue.Empty:
                 pass
         raise ClosedReceiverError()
@@ -56,16 +52,16 @@ class Receiver:
                     if packet[2:] != b'': # This avoids pushing the OK null body as an actual message
                         self.received_packets_queue.put(packet[2:])
                     ack_message = (
-                        ack_constants.ACK_TYPE_NUM).to_bytes(
+                        ACK_TYPE_NUM).to_bytes(
                         1, byteorder='big', signed=False) + (
                         self.expected_seq_num).to_bytes(
                         2, byteorder='big', signed=False)
                     self.sender.send(ack_message)
                     self.expected_seq_num += 1
-                    if self.expected_seq_num > shared_constants.MAX_SEQ_NUM:
+                    if self.expected_seq_num > MAX_SEQ_NUM:
                         self.expected_seq_num = 0
             else:
-                last_ack_seq_num = (self.expected_seq_num - 1) if self.expected_seq_num != 0 else shared_constants.MAX_SEQ_NUM
-                ack_message = (ack_constants.ACK_TYPE_NUM).to_bytes(1, byteorder='big', signed=False) + last_ack_seq_num.to_bytes(2, byteorder='big', signed=False)
+                last_ack_seq_num = (self.expected_seq_num - 1) if self.expected_seq_num != 0 else MAX_SEQ_NUM
+                ack_message = (ACK_TYPE_NUM).to_bytes(1, byteorder='big', signed=False) + last_ack_seq_num.to_bytes(2, byteorder='big', signed=False)
                 self.sender.send(ack_message)
             packet = self.receiver.get()

@@ -1,6 +1,6 @@
 import threading
 import os
-from lib.general import shared_constants as constants
+from lib.general.constants import *
 from lib.general import file_finder
 from lib.general.file_reader import FileReader
 
@@ -16,7 +16,7 @@ class ClientThread(threading.Thread):
 
     def run(self):
         while self.keep_running:
-            received = self.peer.recv(constants.MAX_BUFFER_SIZE)
+            received = self.peer.recv(MAX_BUFFER_SIZE)
             command, name, size = received.decode().split(',')
             filepath = os.path.join(self.storage, name)
 
@@ -43,18 +43,18 @@ class ClientThread(threading.Thread):
         self.peer.sendall(message.encode())
 
         if file_exists:
-            end_exchange = self.peer.recv(constants.MAX_BUFFER_SIZE)
+            end_exchange = self.peer.recv(MAX_BUFFER_SIZE)
             if int(end_exchange.decode()) == 1:  # No desea sobreescribirlo
                 return
 
         file = open(filepath, "wb")
         print("Saving " + name + " in " + self.storage)
 
-        received = self.peer.recv(constants.MAX_BUFFER_SIZE)
+        received = self.peer.recv(MAX_BUFFER_SIZE)
         bytes_received = len(received)
         while received != b'':
             file.write(received)
-            received = self.peer.recv(constants.MAX_BUFFER_SIZE)
+            received = self.peer.recv(MAX_BUFFER_SIZE)
             bytes_received += len(received)
 
         if bytes_received == int(size):
@@ -80,7 +80,7 @@ class ClientThread(threading.Thread):
                 continue_reading = True
                 while continue_reading:
                     try:
-                        bytes_read = file.read_next_section(constants.MAX_BUFFER_SIZE)
+                        bytes_read = file.read_next_section(MAX_BUFFER_SIZE)
                         self.peer.sendall(bytes_read)
                         bytes_sent += len(bytes_read)
                     except EOFError:

@@ -5,8 +5,7 @@ import queue
 
 from lib.go_back_n.gbn_window import GbnWindow
 
-from lib.general import ack_constants
-from lib.general import shared_constants
+from lib.general.constants import *
 from lib.general.atomic_udp_socket import AtomicUDPSocket
 from lib.general.connection_status import ConnectionStatus
 
@@ -42,7 +41,7 @@ class GbnSender:
 
     def send(self, message: bytes, add_metadata: bool = True):
         if self.keep_running:
-            if (len(message) <= shared_constants.MAX_BUFFER_SIZE):
+            if (len(message) <= MAX_BUFFER_SIZE):
                 packet = self.window.add_packet(message, add_metadata)
                 self.sender.send(packet)
             else:
@@ -61,7 +60,7 @@ class GbnSender:
             self.sender.send(packet)
 
     def _confirm_packets(self):
-        base_timeout = ack_constants.BASE_TIMEOUT / 1000
+        base_timeout = PACKET_TIMEOUT / 1000
         checked_all_messages = False
         waited_time = 0
         time_until_timeout = base_timeout

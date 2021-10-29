@@ -5,7 +5,7 @@ sys.path.insert(1, '/')  # To fix library includes
 from lib.general.server_parser import parse_arguments
 from lib.general.clients_acceptor import ClientsAcceptor
 from lib.general.realiable_udp_socket import ReliableUDPSocket
-import lib.general.shared_constants as constants
+import lib.general.constants as constants
 
 args = parse_arguments()
 
@@ -17,7 +17,7 @@ else:
     sv_socket = ReliableUDPSocket(use_goback_n=False)
 
 sv_socket.bind((args.host, args.port))
-sv_socket.listen(constants.MAX_CONNECTIONS)
+sv_socket.listen(constants.MAX_UNCONFIRMED_CONNECTIONS)
 
 acceptor = ClientsAcceptor(sv_socket, args)
 acceptor.start()

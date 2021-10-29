@@ -9,11 +9,13 @@ METADATA_SIZE = MSG_TYPE_SIZE + SEQ_NUM_SIZE
 MAX_SEQ_NUM = 2**16 - 1
 
 MSG_TYPE_NUM = 67
+ACK_TYPE_NUM = 130
 SYN_TYPE_NUM = 50
 OK_TYPE_NUM = 47  # This indicates an accepted SYN request
 
+PACKET_TIMEOUT = 30  # in ms
 
-MAX_CONNECTIONS = 5
+MAX_UNCONFIRMED_CONNECTIONS = 5
 UPD_BYTES_PER_FILE_READ = 1000
 
 UDP_USE_GO_BACK_N = True
@@ -21,3 +23,5 @@ UDP_USE_GO_BACK_N = True
 TIME_UNTIL_DISCONNECTION = 3 # Max time in seconds that can pass between received messages until with considered the connection as lost
 
 PING_TIMEOUT = 0.5 # Time in seconds until a ping message is sent for connection testing purpouses
+
+PACKET_QUEUE_SIZE = 20 # Maximum amount of packets that can be received simultanously

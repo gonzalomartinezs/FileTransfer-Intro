@@ -1,9 +1,9 @@
-from lib.general import ack_constants, shared_constants
 from lib.general.accepted_connections import AcceptedConnections
 from lib.go_back_n.gbn_sender import GbnSender
 from lib.stop_and_wait.sw_sender import StopAndWaitSender
 from lib.general.receiver import ClosedReceiverError, Receiver
 from lib.general.atomic_udp_socket import AtomicUDPSocket
+from lib.general.constants import *
 from queue import Queue
 from enum import Enum
 import threading
@@ -51,12 +51,12 @@ class ReliableUDPSocket:
             raise SocketAlreadySetupError()
 
         connected = False
-        base_seq_num = random.randrange(0, shared_constants.MAX_SEQ_NUM)
-        base_timeout = ack_constants.BASE_TIMEOUT / 1000
+        base_seq_num = random.randrange(0, MAX_SEQ_NUM)
+        base_timeout = PACKET_TIMEOUT / 1000
         waited_time = 0
         time_until_timeout = base_timeout
         self.sckt.sendto(
-            shared_constants.SYN_TYPE_NUM.to_bytes(
+            SYN_TYPE_NUM.to_bytes(
                 1,
                 byteorder='big',
                 signed=False) +
@@ -71,7 +71,7 @@ class ReliableUDPSocket:
             try:
                 if time_until_timeout <= 0:
                     self.sckt.sendto(
-                        shared_constants.SYN_TYPE_NUM.to_bytes(
+                        SYN_TYPE_NUM.to_bytes(
                             1,
                             byteorder='big',
                             signed=False) +
@@ -88,7 +88,7 @@ class ReliableUDPSocket:
                 waited_time += time.time() - before_recv_time
                 time_until_timeout = base_timeout - waited_time
                 if (r_addr[0] == addr[0]) and (r_addr[1] != addr[1]) and (
-                        packet[0] == shared_constants.OK_TYPE_NUM):
+                        packet[0] == OK_TYPE_NUM):
                     connected = True
                     connection_seq_num = int.from_bytes(
                         packet[1:], byteorder='big', signed=False)
@@ -194,18 +194,18 @@ class ReliableUDPSocket:
                 if self.new_connections_queue.full():
                     # We ignore the connection request if the queue is full
                     continue
-                if (packet[0] == shared_constants.SYN_TYPE_NUM) and (
+                if (packet[0] == SYN_TYPE_NUM) and (
                         addr not in ReliableUDPSocket.accepted_connections):
                     connection_seq_num = int.from_bytes(
                         packet[1:], byteorder='big', signed=False)
                     n_sckt = ReliableUDPSocket(self.use_goback_n)
                     base_seq_num = random.randrange(
-                        0, shared_constants.MAX_SEQ_NUM)
+                        0, MAX_SEQ_NUM)
                     n_sckt.type = ReliableUDPSocketType.SERVER_HANDLER
                     n_sckt._initialize_connection(
                         addr, base_seq_num, connection_seq_num)
                     n_sckt.sender.send(
-                        shared_constants.OK_TYPE_NUM.to_bytes(
+                        OK_TYPE_NUM.to_bytes(
                             1,
                             byteorder='big',
                             signed=False) +
@@ -226,23 +226,21 @@ class ReliableUDPSocket:
         while self.keep_running and self.connection_status.connected:
             try:
                 packet = self.sckt.recv(2**16-1) #TODO por ahora con esto agarro el tamanio maximo
-                # if 90 > random.randint(0, 100):
-                #     continue
                 time_since_last_msg = time.time()
                 packet_type = packet[0]
                 # We remove the packet type before redirecting it
                 packet = packet[1:]
-                if (packet_type == ack_constants.ACK_TYPE_NUM) and \
+                if (packet_type == ACK_TYPE_NUM) and \
                         (len(packet) == 2):
                     self.ack_queue.put(packet)
-                elif (packet_type == shared_constants.MSG_TYPE_NUM) and \
+                elif (packet_type == MSG_TYPE_NUM) and \
                         (len(packet) >= 2):
                     self.msg_queue.put(packet)
-                elif (packet_type == shared_constants.OK_TYPE_NUM) and \
+                elif (packet_type == OK_TYPE_NUM) and \
                         (len(packet) == 2):
                     self.msg_queue.put(packet)
             except socket.timeout:
-                if (time.time() - time_since_last_msg) > shared_constants.TIME_UNTIL_DISCONNECTION:
+                if (time.time() - time_since_last_msg) > TIME_UNTIL_DISCONNECTION:
                     self.connection_status.connected = False
             except ConnectionRefusedError: # There was a Connection Error detected by the OS (or some other kind of unknown error)
                     self.connection_status.connected = False

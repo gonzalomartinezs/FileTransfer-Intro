@@ -1,5 +1,5 @@
 import threading
-from lib.general import shared_constants
+from lib.general.constants import *
 import time
 from lib.general.connection_status import ConnectionStatus
 
@@ -18,12 +18,12 @@ class GbnWindow:
     def add_packet(self, packet: bytes, add_metadata: bool):
         self.mutex.acquire()
         while self._is_full() and self.connection_status.connected:
-            self.cv.wait(timeout=shared_constants.PING_TIMEOUT)
+            self.cv.wait(timeout=PING_TIMEOUT)
         if not self.connection_status.connected:
             self.mutex.release()
             raise ConnectionRefusedError
         if add_metadata:
-            packet = (shared_constants.MSG_TYPE_NUM).to_bytes(1, byteorder='big') + (self.next_seq_num).to_bytes(2, byteorder='big') + packet
+            packet = (MSG_TYPE_NUM).to_bytes(1, byteorder='big') + (self.next_seq_num).to_bytes(2, byteorder='big') + packet
         self.packet_buffer.append(packet)
         self._add_to_seq_num()
         self.cv.notify_all()
@@ -48,7 +48,7 @@ class GbnWindow:
             self.base = received_seq_number + 1
             # This is only for the edge case where received_seq_number ==
             # CONST_MAX_SEQ_NUM
-            if (self.base > shared_constants.MAX_SEQ_NUM):
+            if (self.base > MAX_SEQ_NUM):
                 self.base = 0
             self.cv.notify_all()
         is_buffer_empty = (len(self.packet_buffer) == 0)
@@ -67,11 +67,11 @@ class GbnWindow:
         self.mutex.acquire()
         base_time = time.time()
         time_waited = 0
-        while (len(self.packet_buffer) == 0) and (time_waited < shared_constants.PING_TIMEOUT) and not self.closed:
-            self.cv.wait(timeout = shared_constants.PING_TIMEOUT)
+        while (len(self.packet_buffer) == 0) and (time_waited < PING_TIMEOUT) and not self.closed:
+            self.cv.wait(timeout = PING_TIMEOUT)
             time_waited = time.time() - base_time
         self.mutex.release()
-        return time_waited > shared_constants.PING_TIMEOUT
+        return time_waited > PING_TIMEOUT
 
     def close(self):
         self.mutex.acquire()
@@ -88,7 +88,7 @@ class GbnWindow:
         acknowledged_packets = 0
         aux = num - self.base
         if (aux < 0):
-            acknowledged_packets = ((shared_constants.MAX_SEQ_NUM + 1) - self.base) + (num + 1)
+            acknowledged_packets = ((MAX_SEQ_NUM + 1) - self.base) + (num + 1)
         else:
             acknowledged_packets = aux + 1
 
@@ -96,5 +96,5 @@ class GbnWindow:
 
     def _add_to_seq_num(self):
         self.next_seq_num += 1
-        if (self.next_seq_num > shared_constants.MAX_SEQ_NUM):
+        if (self.next_seq_num > MAX_SEQ_NUM):
             self.next_seq_num = 0
