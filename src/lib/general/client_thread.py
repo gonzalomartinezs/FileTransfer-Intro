@@ -52,13 +52,15 @@ class ClientThread(threading.Thread):
 
         received = self.peer.recv(MAX_BUFFER_SIZE)
         bytes_received = len(received)
-        while received != b'':
+        while received != b'' and bytes_received < int(size):
             file.write(received)
             received = self.peer.recv(MAX_BUFFER_SIZE)
             bytes_received += len(received)
 
         if bytes_received == int(size):
             print(name + " was successfully uploaded.")
+        else:
+            print(name + "is corrupted, unknown error.")
         file.close()
 
     def __send_file(self, name, filepath):
