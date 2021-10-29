@@ -226,6 +226,7 @@ class ReliableUDPSocket:
 
     def _receive_messages(self):
         self.sckt.settimeout(0.5)
+        time_since_last_msg = time.time()
         while self.keep_running and self.connection_status.connected:
             try:
                 packet = self.sckt.recv(MAX_UDP_PACKET_SIZE)
