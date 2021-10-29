@@ -40,7 +40,7 @@ def upload_file(arguments, cl_socket):
                 bytes_read = file.read_next_section(constants.MAX_BUFFER_SIZE)
                 cl_socket.sendall(bytes_read)
                 sent += len(bytes_read)
-                print("Already sent {}/{} bytes.".format(sent, filesize))
+                print("Already sent {}/{} bytes.".format(sent, filesize) + " ({}%)".format(sent / filesize))
             except EOFError:
                 continue_reading = False
                 if sent == filesize:
