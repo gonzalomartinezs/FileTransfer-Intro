@@ -9,10 +9,6 @@ import sys
 sys.path.insert(1, '../../../')  # To fix library includes
 
 
-class InvalidDestinationError(Exception):
-    pass
-
-
 class InvalidMessageSize(Exception):
     pass
 
@@ -42,8 +38,6 @@ class StopAndWaitSender:
                 packet = self._generate_packet(message, add_metadata)
                 while self.connection_status.connected:
                     try:
-                        # No se si aca tengo q hacer send o si tengo que
-                        # encolar el mensaje en packetBuff
                         self.packet_buff.put(packet, timeout=PING_TIMEOUT)
                         break
                     except queue.Full:
@@ -60,7 +54,7 @@ class StopAndWaitSender:
     # PRIVATE
 
     def _generate_packet(self, msg: bytes, add_metadata: bool = True) -> bytes:
-        self.mutex.acquire()
+        self.mutex.acquire()  # This is to avoid a race condition with the seq_num if send() and _try_send() try to generate a packet at the same time
         packet = msg
         if add_metadata:
             packet = (MSG_TYPE_NUM).to_bytes(1, byteorder='big') + \
@@ -85,6 +79,8 @@ class StopAndWaitSender:
                         packet_to_send = self.packet_buff.get(
                             timeout=PING_TIMEOUT)
                     except queue.Empty:
+                        # If we cant get a packet in PING_TIMEOUT we send a
+                        # ping msg to check the connection
                         packet_to_send = self._generate_packet(
                             b'', add_metadata=True)
                     expected_seq_num = int.from_bytes(
@@ -93,10 +89,13 @@ class StopAndWaitSender:
                     send_next_package = False
                 before_recv_time = time.time()
                 if time_until_timeout <= 0:
+                    # If a timeout occured resend the packet and reset the
+                    # timeout
                     self.sender.send(packet_to_send)
                     waited_time = 0
                     time_until_timeout = base_timeout
-                packet = self.receiver.get(timeout=time_until_timeout)
+                packet = self.receiver.get(
+                    timeout=time_until_timeout)  # Wait for acknowledge
                 waited_time += time.time() - before_recv_time
                 time_until_timeout = base_timeout - waited_time
                 received_seq_num = int.from_bytes(

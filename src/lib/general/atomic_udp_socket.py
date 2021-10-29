@@ -4,6 +4,7 @@ import random
 
 from lib.general.constants import PACKET_LOSS_PROBABILITY
 
+
 class AtomicUDPSocket:
     def __init__(self):
         self.send_mutex = threading.Lock()
@@ -18,7 +19,8 @@ class AtomicUDPSocket:
     def sendto(self, msg: bytes, addr):
         self.send_mutex.acquire()
         try:
-            if PACKET_LOSS_PROBABILITY <= random.randint(0, 100): # This lets us simulate packet loss
+            if PACKET_LOSS_PROBABILITY <= random.randint(
+                    0, 100):  # This lets us simulate packet loss
                 self.sckt.sendto(msg, addr)
             self.send_mutex.release()
         # There was a Connection Error detected by the OS (or some other kind
@@ -30,7 +32,8 @@ class AtomicUDPSocket:
     def send(self, msg: bytes):
         self.send_mutex.acquire()
         try:
-            if PACKET_LOSS_PROBABILITY <= random.randint(0, 100): # This lets us simulate packet loss
+            if PACKET_LOSS_PROBABILITY <= random.randint(
+                    0, 100):  # This lets us simulate packet loss
                 self.sckt.send(msg)
             self.send_mutex.release()
         # There was a Connection Error detected by the OS (or some other kind

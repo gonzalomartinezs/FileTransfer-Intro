@@ -35,7 +35,7 @@ def download_file(arguments, cl_socket):
         while received != b'' and bytes_received <= filesize:
             file.write(received)
             if bytes_received == filesize:
-                break # This avoids waiting for more time in the recv that has an already closed connection
+                break  # This avoids waiting for more time in the recv that has an already closed connection
             received = cl_socket.recv(constants.MAX_BUFFER_SIZE)
             bytes_received += len(received)
             print("Downloaded {}/{} bytes".format(bytes_received, filesize))
