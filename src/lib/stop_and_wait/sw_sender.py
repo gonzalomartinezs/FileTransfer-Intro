@@ -34,6 +34,7 @@ class StopAndWaitSender:
         self.connection_status = connection_status
         self.keep_running = True
         self.packet_buff = queue.Queue(maxsize=MAX_PACKET_BUFF_SIZE)
+        self.mutex = threading.Lock()
         self.ack_thread = threading.Thread(
             target=self._try_send, daemon=True)
         self.ack_thread.start()
@@ -41,11 +42,13 @@ class StopAndWaitSender:
     def send(self, message: bytes, add_metadata: bool = True):
         if (self.should_keep_running):
             if len(message) <= shared_constants.MAX_BUFFER_SIZE:
-                #self._try_send(message, add_metadata)
-                if add_metadata:
-                    message = (shared_constants.MSG_TYPE_NUM).to_bytes(1, byteorder='big') + self.seq_num.to_bytes(2, "big") + message
-                    self.seq_num += 1
-                self.packet_buff.put(message) #No se si aca tengo q hacer send o si tengo que encolar el mensaje en packetBuff
+                packet = self._generate_packet(message, add_metadata)
+                while self.connection_status.connected:
+                    try:
+                        self.packet_buff.put(packet, timeout=shared_constants.PING_TIMEOUT) #No se si aca tengo q hacer send o si tengo que encolar el mensaje en packetBuff
+                        break
+                    except queue.Full:
+                        pass
             else:
                 raise InvalidMessageSize()
         else:
@@ -53,8 +56,18 @@ class StopAndWaitSender:
 
     def close(self):
         self.keep_running = False
+        self.ack_thread.join()
 
     # PRIVATE
+
+    def _generate_packet(self, msg: bytes, add_metadata: bool = True) -> bytes:
+        self.mutex.acquire()
+        packet = msg
+        if add_metadata:
+            packet = (shared_constants.MSG_TYPE_NUM).to_bytes(1, byteorder='big') + self.seq_num.to_bytes(2, "big") + msg
+        self.seq_num += 1
+        self.mutex.release()
+        return packet
     
     def _try_send(self):
         base_timeout = ack_constants.BASE_TIMEOUT / 1000
@@ -65,9 +78,13 @@ class StopAndWaitSender:
         while (self.keep_running or not self.packet_buff.empty()) and self.connection_status.connected:
             try:
                 if send_next_package:
-                    packet_to_send = self.packet_buff.get()
+                    try:
+                        packet_to_send = self.packet_buff.get(timeout=shared_constants.PING_TIMEOUT)
+                    except queue.Empty:
+                        packet_to_send = self._generate_packet(b'', add_metadata=True)
                     expected_seq_num = int.from_bytes(packet_to_send[1:3], byteorder='big', signed=False)
                     self.sender.send(packet_to_send)
+                    send_next_package = False
                 before_recv_time = time.time()
                 if time_until_timeout <= 0:
                     self.sender.send(packet_to_send)
@@ -78,17 +95,12 @@ class StopAndWaitSender:
                 time_until_timeout = base_timeout - waited_time
                 received_seq_num = int.from_bytes(
                     packet, byteorder='big', signed=False)
-                print('en el send recibi ', received_seq_num)
-                print('en el send espero recibir ', expected_seq_num)
                 if received_seq_num == expected_seq_num:
                     send_next_package = True
                     time_until_timeout = base_timeout
-                else:
-                    send_next_package = False
                 waited_time = 0
             except queue.Empty:
                 time_until_timeout = 0
-                send_next_package = False
             except ConnectionRefusedError:  # There was a Connection Error detected by the OS (or some other kind of unknown error)
                 self.connection_status.connected = False
 

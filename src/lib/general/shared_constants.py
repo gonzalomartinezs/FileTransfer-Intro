@@ -19,3 +19,5 @@ UPD_BYTES_PER_FILE_READ = 1000
 UDP_USE_GO_BACK_N = True
 
 TIME_UNTIL_DISCONNECTION = 3 # Max time in seconds that can pass between received messages until with considered the connection as lost
+
+PING_TIMEOUT = 0.5 # Time in seconds until a ping message is sent for connection testing purpouses

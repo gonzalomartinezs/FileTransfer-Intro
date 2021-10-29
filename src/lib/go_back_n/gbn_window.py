@@ -4,8 +4,6 @@ import time
 from lib.general.connection_status import ConnectionStatus
 
 
-PING_TIMEOUT = 0.5 # Time in seconds until a ping message is sent for connection testing purpouses
-
 class GbnWindow:
     def __init__(self, window_size: int, base_seq_num: int, connection_status: ConnectionStatus):
         self.mutex = threading.Lock()
@@ -20,7 +18,7 @@ class GbnWindow:
     def add_packet(self, packet: bytes, add_metadata: bool):
         self.mutex.acquire()
         while self._is_full() and self.connection_status.connected:
-            self.cv.wait(timeout=PING_TIMEOUT)
+            self.cv.wait(timeout=shared_constants.PING_TIMEOUT)
         if not self.connection_status.connected:
             self.mutex.release()
             raise ConnectionRefusedError
@@ -69,11 +67,11 @@ class GbnWindow:
         self.mutex.acquire()
         base_time = time.time()
         time_waited = 0
-        while (len(self.packet_buffer) == 0) and (time_waited < PING_TIMEOUT) and not self.closed:
-            self.cv.wait(timeout = PING_TIMEOUT)
+        while (len(self.packet_buffer) == 0) and (time_waited < shared_constants.PING_TIMEOUT) and not self.closed:
+            self.cv.wait(timeout = shared_constants.PING_TIMEOUT)
             time_waited = time.time() - base_time
         self.mutex.release()
-        return time_waited > PING_TIMEOUT
+        return time_waited > shared_constants.PING_TIMEOUT
 
     def close(self):
         self.mutex.acquire()
@@ -83,15 +81,14 @@ class GbnWindow:
 
     # PRIVATE
     def _is_full(self) -> bool:
-        return (self.next_seq_num - self.base) == self.window_size
+        #return (self.next_seq_num - self.base) == self.window_size
+        return (self._get_packets_between(self.next_seq_num) == self.window_size)
 
     def _get_packets_between(self, num):
         acknowledged_packets = 0
         aux = num - self.base
         if (aux < 0):
-            acknowledged_packets = (
-                                           (
-                                                       shared_constants.MAX_SEQ_NUM + 1) - self.base) + (num + 1)
+            acknowledged_packets = ((shared_constants.MAX_SEQ_NUM + 1) - self.base) + (num + 1)
         else:
             acknowledged_packets = aux + 1
 

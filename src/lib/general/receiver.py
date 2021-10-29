@@ -51,8 +51,6 @@ class Receiver:
         while self.keep_running and self.connection_status.connected:
             packet_seq_number = int.from_bytes(
                 packet[:2], byteorder='big', signed=False)
-            print('recibi ', packet_seq_number)
-            print('espero', self.expected_seq_num)
             if (packet_seq_number == self.expected_seq_num):
                 if not self.received_packets_queue.full():
                     if packet[2:] != b'': # This avoids pushing the OK null body as an actual message
@@ -64,6 +62,8 @@ class Receiver:
                         2, byteorder='big', signed=False)
                     self.sender.send(ack_message)
                     self.expected_seq_num += 1
+                    if self.expected_seq_num > shared_constants.MAX_SEQ_NUM:
+                        self.expected_seq_num = 0
             else:
                 last_ack_seq_num = (self.expected_seq_num - 1) if self.expected_seq_num != 0 else shared_constants.MAX_SEQ_NUM
                 ack_message = (ack_constants.ACK_TYPE_NUM).to_bytes(1, byteorder='big', signed=False) + last_ack_seq_num.to_bytes(2, byteorder='big', signed=False)

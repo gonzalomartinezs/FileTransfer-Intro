@@ -226,8 +226,8 @@ class ReliableUDPSocket:
         while self.keep_running and self.connection_status.connected:
             try:
                 packet = self.sckt.recv(2**16-1) #TODO por ahora con esto agarro el tamanio maximo
-                # if 90 > random.randint(0, 100):
-                #     continue
+                if 90 > random.randint(0, 100):
+                    continue
                 time_since_last_msg = time.time()
                 packet_type = packet[0]
                 # We remove the packet type before redirecting it
