@@ -40,7 +40,6 @@ class ReliableUDPSocket:
     def bind(self, addr):
         self.sckt.bind(addr)
 
-    # TODO agregar un timeout total en el que deje de intentar
     def connect(self, addr):
         if self.type is None:
             self.type = ReliableUDPSocketType.CLIENT
@@ -82,8 +81,7 @@ class ReliableUDPSocket:
                     waited_time = 0
                     time_until_timeout = base_timeout
                 self.sckt.settimeout(time_until_timeout)
-                packet, r_addr = self.sckt.recvfrom(
-                    2**16-1)
+                packet, r_addr = self.sckt.recvfrom(MAX_UDP_PACKET_SIZE)
                 waited_time += time.time() - before_recv_time
                 time_until_timeout = base_timeout - waited_time
                 if (r_addr[0] == addr[0]) and (r_addr[1] != addr[1]) and (
@@ -110,7 +108,8 @@ class ReliableUDPSocket:
             target=self._listen_for_connections, daemon=True)
         self.thread.start()
 
-    def accept(self):  # TODO indicar que esto retorna un (ReliableUDPSocket, Addr)
+    # Returns (ReliableUDPSocket, (str, int)) where (str, int) == Addr (that is, an ip and a port)
+    def accept(self):
         c = self.new_connections_queue.get()
         if c == None:
             raise ClosedSocketError
@@ -130,8 +129,6 @@ class ReliableUDPSocket:
         except ClosedReceiverError:
             return b''
 
-    # IMPORTANT: DO NOT attempt to reuse the socket after executing close() on
-    # it! Otherwhise you will get an exception!
     def close(self):
         if self.type == ReliableUDPSocketType.CLIENT:
             self.sender.close()
@@ -153,6 +150,7 @@ class ReliableUDPSocket:
             self.thread.join()
             self.sckt.close()
             self.new_connections_queue.put(None) # Avoids getting locked in the accept method
+        self.type = None
         # If type == None then there is nothing to be done so no error is
         # raised
 
@@ -185,13 +183,10 @@ class ReliableUDPSocket:
         self.thread.start()
 
     def _listen_for_connections(self):
-        # TODO ver si hay una alternativa a un timeout para el tema del close,
-        # pero creo que no hay mucha
         self.sckt.settimeout(0.5)
         while self.keep_running:
             try:
-                packet, addr = self.sckt.recvfrom(
-                    2**16 - 1)
+                packet, addr = self.sckt.recvfrom(MAX_UDP_PACKET_SIZE)
                 if self.new_connections_queue.full():
                     # We ignore the connection request if the queue is full
                     continue
@@ -221,12 +216,10 @@ class ReliableUDPSocket:
                 pass
 
     def _receive_messages(self):
-        # TODO ver si hay una alternativa a un timeout para el tema del close,
-        # pero creo que no hay mucha
         self.sckt.settimeout(0.5)
         while self.keep_running and self.connection_status.connected:
             try:
-                packet = self.sckt.recv(2**16-1) #TODO por ahora con esto agarro el tamanio maximo
+                packet = self.sckt.recv(MAX_UDP_PACKET_SIZE)
                 time_since_last_msg = time.time()
                 packet_type = packet[0]
                 # We remove the packet type before redirecting it
