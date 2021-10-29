@@ -21,7 +21,7 @@ class ClosedSocketError(Exception):
     pass
 
 
-class ReliableUDPSocketType(Enum):a
+class ReliableUDPSocketType(Enum):
     CLIENT = 1
     SERVER_LISTENER = 2
     SERVER_HANDLER = 3
