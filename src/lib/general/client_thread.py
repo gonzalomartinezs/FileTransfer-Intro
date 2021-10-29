@@ -90,7 +90,7 @@ class ClientThread(threading.Thread):
                         else:
                             print("An error occurred while sending the file."
                                   "Some bytes were not delivered.")
-                    # except BaseException:
-                    #     continue_reading = False
-                    #     print("An error occurred while sending the file.")
+                    except BaseException:
+                        continue_reading = False
+                        print("An error occurred while sending the file.")
                 file.close()
