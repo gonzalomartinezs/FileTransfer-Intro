@@ -11,7 +11,10 @@ from lib.general.realiable_udp_socket import ReliableUDPSocket
 
 
 def upload_file(arguments, cl_socket):
-    msg = "0," + arguments.name
+    filepath = os.path.join(arguments.source, arguments.name)
+    filesize = os.path.getsize(filepath)
+
+    msg = "0," + arguments.name + "," + str(filesize)
     cl_socket.send(msg.encode())
 
     response = int(cl_socket.recv(constants.MAX_BUFFER_SIZE).decode())
@@ -26,20 +29,25 @@ def upload_file(arguments, cl_socket):
         else:
             cl_socket.send("0".encode())
 
-    filepath = os.path.join(arguments.source, arguments.name)
     try:
         file = FileReader(filepath)
     except IOError:
         print("Unable to open file " + filepath + ".")
     else:
         continue_reading = True
+        sent = 0
         while continue_reading:
             try:
-                bytes_read = file.read_next_section(1000)
-                cl_socket.send(bytes_read)
+                bytes_read = file.read_next_section(constants.MAX_BUFFER_SIZE)
+                sent += cl_socket.send(bytes_read)
+                print("Already sent {}/{} bytes.".format(sent, filesize))
             except EOFError:
                 continue_reading = False
-                print("File successfully uploaded.")
+                if sent == filesize:
+                    print("File successfully uploaded.")
+                else:
+                    print("An error occurred while uploading the file. Not all"
+                          "bytes were sent.")
             except BaseException:
                 continue_reading = False
                 print("An error occurred while uploading the file.")

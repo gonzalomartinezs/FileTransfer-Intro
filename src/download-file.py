@@ -10,13 +10,12 @@ from lib.general import file_finder
 from lib.general.realiable_udp_socket import ReliableUDPSocket
 
 
-
 def download_file(arguments, cl_socket):
-    msg = "1," + arguments.name
+    msg = "1," + arguments.name + ",0"
     cl_socket.send(msg.encode())
 
-    response = int(cl_socket.recv(constants.MAX_BUFFER_SIZE).decode())
-    if response == 1:
+    filesize = int(cl_socket.recv(constants.MAX_BUFFER_SIZE).decode())
+    if filesize == 0:
         print("The file does not exist on the server.")
         return
 
@@ -32,13 +31,17 @@ def download_file(arguments, cl_socket):
     try:
         file = open(filepath, "wb")
         received = cl_socket.recv(constants.MAX_BUFFER_SIZE)
+        bytes_received = len(received)
 
         while received != b'':
             file.write(received)
             received = cl_socket.recv(constants.MAX_BUFFER_SIZE)
+            bytes_received += len(received)
+            print("Downloaded {}/{} bytes".format(bytes_received, filesize))
     except Exception:
         print("Something went wrong while downloading the file.")
-    else:
+
+    if bytes_received == filesize:
         print("File succesfully downloaded.")
     file.close()
 

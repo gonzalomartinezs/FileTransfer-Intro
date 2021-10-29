@@ -17,11 +17,11 @@ class ClientThread(threading.Thread):
     def run(self):
         while self.keep_running:
             received = self.peer.recv(constants.MAX_BUFFER_SIZE)
-            command, name = received.decode().split(',')
+            command, name, size = received.decode().split(',')
             filepath = os.path.join(self.storage, name)
 
             if int(command) == 0:
-                self.__recv_file(name, filepath)
+                self.__recv_file(name, filepath, size)
             else:
                 self.__send_file(name, filepath)
 
@@ -34,7 +34,7 @@ class ClientThread(threading.Thread):
     def is_dead(self):
         return self.keep_running == False
 
-    def __recv_file(self, name, filepath):
+    def __recv_file(self, name, filepath, size):
         file_exists = file_finder.file_exists(self.storage, name)
         if file_exists:
             message = "1"
@@ -51,19 +51,23 @@ class ClientThread(threading.Thread):
         print("Saving " + name + " in " + self.storage)
 
         received = self.peer.recv(constants.MAX_BUFFER_SIZE)
+        bytes_received = len(received)
         while received != b'':
             file.write(received)
             received = self.peer.recv(constants.MAX_BUFFER_SIZE)
+            bytes_received += len(received)
 
-        print(name + " was successfully uploaded.")
+        if bytes_received == int(size):
+            print(name + " was successfully uploaded.")
         file.close()
 
     def __send_file(self, name, filepath):
         file_exists = file_finder.file_exists(self.storage, name)
         if not file_exists:
-            message = "1"
-        else:
             message = "0"
+        else:
+            message = str(os.path.getsize(filepath))
+
         self.peer.send(message.encode())
 
         if file_exists:
@@ -72,14 +76,19 @@ class ClientThread(threading.Thread):
             except IOError:
                 print("Unable to open file " + filepath + ".")
             else:
+                bytes_sent = 0
                 continue_reading = True
                 while continue_reading:
                     try:
                         bytes_read = file.read_next_section(constants.MAX_BUFFER_SIZE)
-                        self.peer.send(bytes_read)
+                        bytes_sent += self.peer.send(bytes_read)
                     except EOFError:
                         continue_reading = False
-                        print("File successfully sent.")
+                        if bytes_sent == os.path.getsize(filepath):
+                            print(name + " successfully sent.")
+                        else:
+                            print("An error occurred while sending the file."
+                                  "Some bytes were not delivered.")
                     except BaseException:
                         continue_reading = False
                         print("An error occurred while sending the file.")
