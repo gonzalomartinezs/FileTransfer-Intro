@@ -16,7 +16,7 @@ OK_TYPE_NUM = 47  # This indicates an accepted SYN request
 PACKET_TIMEOUT = 30  # in ms
 
 MAX_UNCONFIRMED_CONNECTIONS = 5
-UPD_BYTES_PER_FILE_READ = 1000
+UPD_BYTES_PER_FILE_READ = 1024
 
 UDP_USE_GO_BACK_N = True
 
@@ -26,4 +26,6 @@ PING_TIMEOUT = 0.5 # Time in seconds until a ping message is sent for connection
 
 PACKET_QUEUE_SIZE = 20 # Maximum amount of packets that can be received simultanously
 
-GBN_WINDOW_SIZE = 15
+GBN_WINDOW_SIZE = 15 # The size of the window in GBN
+
+CONNECT_TIMEOUT = 2 # The time in seconds until the connect method throws an error because no connection was established

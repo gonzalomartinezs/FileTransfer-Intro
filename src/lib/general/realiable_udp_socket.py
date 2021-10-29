@@ -52,6 +52,8 @@ class ReliableUDPSocket:
         base_timeout = PACKET_TIMEOUT / 1000
         waited_time = 0
         time_until_timeout = base_timeout
+        base_connected_time = time.time()
+
         self.sckt.sendto(
             SYN_TYPE_NUM.to_bytes(
                 1,
@@ -91,6 +93,8 @@ class ReliableUDPSocket:
                         packet[1:], byteorder='big', signed=False)
             except socket.timeout:
                 time_until_timeout = 0
+                if (time.time() - base_connected_time) >= CONNECT_TIMEOUT:
+                    raise ConnectionRefusedError
 
         self.sckt.settimeout(None)  # This removes the timeout we were setting
         self._initialize_connection(r_addr, base_seq_num, connection_seq_num)
