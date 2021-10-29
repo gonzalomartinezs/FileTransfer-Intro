@@ -32,7 +32,7 @@ def download_file(arguments, cl_socket):
         received = cl_socket.recv(constants.MAX_BUFFER_SIZE)
         bytes_received = len(received)
 
-        while received != b'' and bytes_received < filesize:
+        while received != b'' and bytes_received <= filesize:
             file.write(received)
             received = cl_socket.recv(constants.MAX_BUFFER_SIZE)
             bytes_received += len(received)

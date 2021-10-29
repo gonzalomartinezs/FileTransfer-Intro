@@ -52,7 +52,7 @@ class ClientThread(threading.Thread):
 
         received = self.peer.recv(MAX_BUFFER_SIZE)
         bytes_received = len(received)
-        while received != b'' and bytes_received < int(size):
+        while received != b'' and bytes_received <= int(size):
             file.write(received)
             received = self.peer.recv(MAX_BUFFER_SIZE)
             bytes_received += len(received)
