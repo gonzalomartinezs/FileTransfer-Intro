@@ -12,9 +12,6 @@ import time
 import socket
 from lib.general.connection_status import ConnectionStatus
 
-WINDOW_SIZE = 10
-
-
 class SocketAlreadySetupError(Exception):
     pass
 
@@ -173,7 +170,7 @@ class ReliableUDPSocket:
             self.sender = GbnSender(
                 self.sckt,
                 self.ack_queue,
-                WINDOW_SIZE,
+                GBN_WINDOW_SIZE,
                 base_seq_num,
                 self.connection_status)
         else:

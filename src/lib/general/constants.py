@@ -25,3 +25,5 @@ TIME_UNTIL_DISCONNECTION = 3 # Max time in seconds that can pass between receive
 PING_TIMEOUT = 0.5 # Time in seconds until a ping message is sent for connection testing purpouses
 
 PACKET_QUEUE_SIZE = 20 # Maximum amount of packets that can be received simultanously
+
+GBN_WINDOW_SIZE = 15
