@@ -1,4 +1,4 @@
-from lib.general.realiable_udp_socket import ReliableUDPSocket
+from lib.general.reliable_udp_socket import ReliableUDPSocket
 from lib.general import file_finder
 from lib.general import client_parser
 import lib.general.constants as constants

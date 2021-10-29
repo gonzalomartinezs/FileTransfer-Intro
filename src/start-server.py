@@ -1,5 +1,5 @@
 import lib.general.constants as constants
-from lib.general.realiable_udp_socket import ReliableUDPSocket
+from lib.general.reliable_udp_socket import ReliableUDPSocket
 from lib.general.clients_acceptor import ClientsAcceptor
 from lib.general.server_parser import parse_arguments
 import socket
