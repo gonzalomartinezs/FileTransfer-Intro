@@ -12,19 +12,24 @@ import time
 import socket
 from lib.general.connection_status import ConnectionStatus
 
+
 class SocketAlreadySetupError(Exception):
     pass
 
+
 class ClosedSocketError(Exception):
     pass
+
 
 class ReliableUDPSocketType(Enum):
     CLIENT = 1
     SERVER_LISTENER = 2
     SERVER_HANDLER = 3
 
+
 class ReliableUDPSocket:
-    accepted_connections = AcceptedConnections() # Used by the listeners and handlers
+    # Used by the listeners and handlers
+    accepted_connections = AcceptedConnections()
 
     def __init__(self, use_goback_n: bool = False):
         self.sckt = AtomicUDPSocket()
@@ -108,10 +113,11 @@ class ReliableUDPSocket:
             target=self._listen_for_connections, daemon=True)
         self.thread.start()
 
-    # Returns (ReliableUDPSocket, (str, int)) where (str, int) == Addr (that is, an ip and a port)
+    # Returns (ReliableUDPSocket, (str, int)) where (str, int) == Addr (that
+    # is, an ip and a port)
     def accept(self):
         c = self.new_connections_queue.get()
-        if c == None:
+        if c is None:
             raise ClosedSocketError
         return c
 
@@ -143,21 +149,20 @@ class ReliableUDPSocket:
             self.keep_running = False
             self.thread.join()
             self.sckt.close()
-            ReliableUDPSocket.accepted_connections.remove_connection(self.peer_addr)
+            ReliableUDPSocket.accepted_connections.remove_connection(
+                self.peer_addr)
             self.connection_status.connected = False
         elif self.type == ReliableUDPSocketType.SERVER_LISTENER:
             self.keep_running = False
             self.thread.join()
             self.sckt.close()
-            self.new_connections_queue.put(None) # Avoids getting locked in the accept method
+            # Avoids getting locked in the accept method
+            self.new_connections_queue.put(None)
         self.type = None
         # If type == None then there is nothing to be done so no error is
         # raised
 
-
-
-
-    ####################### PRIVATE ####################### 
+    ####################### PRIVATE #######################
 
     def _initialize_connection(self,
                                dest_addr,
@@ -167,7 +172,11 @@ class ReliableUDPSocket:
         self.sckt.connect(dest_addr)
         self.connection_status = ConnectionStatus()
         self.peer_addr = dest_addr
-        self.receiver = Receiver(self.sckt, self.msg_queue, connection_seq_num, self.connection_status)
+        self.receiver = Receiver(
+            self.sckt,
+            self.msg_queue,
+            connection_seq_num,
+            self.connection_status)
         if (self.use_goback_n):
             self.sender = GbnSender(
                 self.sckt,
@@ -236,5 +245,7 @@ class ReliableUDPSocket:
             except socket.timeout:
                 if (time.time() - time_since_last_msg) > TIME_UNTIL_DISCONNECTION:
                     self.connection_status.connected = False
-            except ConnectionRefusedError: # There was a Connection Error detected by the OS (or some other kind of unknown error)
-                    self.connection_status.connected = False
+            # There was a Connection Error detected by the OS (or some other
+            # kind of unknown error)
+            except ConnectionRefusedError:
+                self.connection_status.connected = False

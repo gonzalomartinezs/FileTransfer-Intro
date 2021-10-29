@@ -5,7 +5,8 @@ from lib.general.connection_status import ConnectionStatus
 
 
 class GbnWindow:
-    def __init__(self, window_size: int, base_seq_num: int, connection_status: ConnectionStatus):
+    def __init__(self, window_size: int, base_seq_num: int,
+                 connection_status: ConnectionStatus):
         self.mutex = threading.Lock()
         self.window_size = window_size
         self.base = base_seq_num
@@ -23,16 +24,17 @@ class GbnWindow:
             self.mutex.release()
             raise ConnectionRefusedError
         if add_metadata:
-            packet = (MSG_TYPE_NUM).to_bytes(1, byteorder='big') + (self.next_seq_num).to_bytes(2, byteorder='big') + packet
+            packet = (MSG_TYPE_NUM).to_bytes(1, byteorder='big') + \
+                (self.next_seq_num).to_bytes(2, byteorder='big') + packet
         self.packet_buffer.append(packet)
         self._add_to_seq_num()
         self.cv.notify_all()
         self.mutex.release()
         return packet
 
-
     # Returns True if there are not any messages whose acknowledge was not
     # received, otherwise returns False
+
     def update_base(self, received_seq_number: int) -> bool:
         self.mutex.acquire()
 
@@ -67,8 +69,9 @@ class GbnWindow:
         self.mutex.acquire()
         base_time = time.time()
         time_waited = 0
-        while (len(self.packet_buffer) == 0) and (time_waited < PING_TIMEOUT) and not self.closed:
-            self.cv.wait(timeout = PING_TIMEOUT)
+        while (len(self.packet_buffer) == 0) and (
+                time_waited < PING_TIMEOUT) and not self.closed:
+            self.cv.wait(timeout=PING_TIMEOUT)
             time_waited = time.time() - base_time
         self.mutex.release()
         return time_waited > PING_TIMEOUT
@@ -81,8 +84,9 @@ class GbnWindow:
 
     # PRIVATE
     def _is_full(self) -> bool:
-        #return (self.next_seq_num - self.base) == self.window_size
-        return (self._get_packets_between(self.next_seq_num) == self.window_size)
+        # return (self.next_seq_num - self.base) == self.window_size
+        return (self._get_packets_between(
+            self.next_seq_num) == self.window_size)
 
     def _get_packets_between(self, num):
         acknowledged_packets = 0

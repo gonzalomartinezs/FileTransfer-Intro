@@ -1,11 +1,11 @@
+import lib.general.constants as constants
+from lib.general.realiable_udp_socket import ReliableUDPSocket
+from lib.general.clients_acceptor import ClientsAcceptor
+from lib.general.server_parser import parse_arguments
 import socket
 import sys
 sys.path.insert(1, '/')  # To fix library includes
 
-from lib.general.server_parser import parse_arguments
-from lib.general.clients_acceptor import ClientsAcceptor
-from lib.general.realiable_udp_socket import ReliableUDPSocket
-import lib.general.constants as constants
 
 args = parse_arguments()
 

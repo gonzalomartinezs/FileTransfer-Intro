@@ -65,12 +65,13 @@ class GbnSender:
         waited_time = 0
         time_until_timeout = base_timeout
 
-        while (
-                self.keep_running or not checked_all_messages) and self.connection_status.connected:
+        while (self.keep_running or not checked_all_messages) \
+                and self.connection_status.connected:
             before_recv_time = time.time()
             try:
                 if self.window.wait_for_sent_packet():
-                    ping_packet = self.window.add_packet(b'', add_metadata=True)
+                    ping_packet = self.window.add_packet(
+                        b'', add_metadata=True)
                     self.sender.send(
                         ping_packet)  # This empty message is used as a PING message, to check for connection status
                 if time_until_timeout <= 0:
@@ -87,5 +88,7 @@ class GbnSender:
                 waited_time = 0
             except queue.Empty:
                 time_until_timeout = 0
-            except ConnectionRefusedError:  # There was a Connection Error detected by the OS (or some other kind of unknown error)
+            # There was a Connection Error detected by the OS (or some other
+            # kind of unknown error)
+            except ConnectionRefusedError:
                 self.connection_status.connected = False

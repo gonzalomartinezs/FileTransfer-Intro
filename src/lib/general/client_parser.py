@@ -24,13 +24,30 @@ def parse_arguments(mode):
     cl_parser = argparse.ArgumentParser(description=descript)
 
     # Argumentos posicionales (obligatorios)
-    cl_parser.add_argument("-H", dest="host", help="service IP address", required=True)
-    cl_parser.add_argument("-p", dest="port", help="service port", type=int, required=True)
+    cl_parser.add_argument(
+        "-H",
+        dest="host",
+        help="service IP address",
+        required=True)
+    cl_parser.add_argument(
+        "-p",
+        dest="port",
+        help="service port",
+        type=int,
+        required=True)
 
     if mode == "download":
-        cl_parser.add_argument("-d", dest="dest", help="destination file path", default='./')
+        cl_parser.add_argument(
+            "-d",
+            dest="dest",
+            help="destination file path",
+            default='./')
     elif mode == "upload":
-        cl_parser.add_argument("-s", dest="source", help="source file path", default='./')
+        cl_parser.add_argument(
+            "-s",
+            dest="source",
+            help="source file path",
+            default='./')
 
     cl_parser.add_argument("-n", dest="name", help="file name", required=True)
     cl_parser.add_argument("-m", dest="mode", help="socket type used "

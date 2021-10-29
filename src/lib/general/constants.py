@@ -21,12 +21,17 @@ UPD_BYTES_PER_FILE_READ = 1024
 
 UDP_USE_GO_BACK_N = True
 
-TIME_UNTIL_DISCONNECTION = 3 # Max time in seconds that can pass between received messages until with considered the connection as lost
+# Max time in seconds that can pass between received messages until with
+# considered the connection as lost
+TIME_UNTIL_DISCONNECTION = 3
 
-PING_TIMEOUT = 0.5 # Time in seconds until a ping message is sent for connection testing purpouses
+# Time in seconds until a ping message is sent for connection testing purpouses
+PING_TIMEOUT = 0.5
 
-PACKET_QUEUE_SIZE = 20 # Maximum amount of packets that can be received simultanously
+PACKET_QUEUE_SIZE = 20  # Maximum amount of packets that can be received simultanously
 
-GBN_WINDOW_SIZE = 15 # The size of the window in GBN
+GBN_WINDOW_SIZE = 15  # The size of the window in GBN
 
-CONNECT_TIMEOUT = 2 # The time in seconds until the connect method throws an error because no connection was established
+# The time in seconds until the connect method throws an error because no
+# connection was established
+CONNECT_TIMEOUT = 2

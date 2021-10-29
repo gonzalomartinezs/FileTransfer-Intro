@@ -5,8 +5,10 @@ from lib.general.connection_status import ConnectionStatus
 from queue import Queue
 import queue
 
+
 class ClosedReceiverError(Exception):
     pass
+
 
 class Receiver:
     def __init__(
@@ -30,7 +32,8 @@ class Receiver:
             raise ClosedReceiverError()
         while self.connection_status.connected == True:
             try:
-                return self.received_packets_queue.get(timeout=TIME_UNTIL_DISCONNECTION)
+                return self.received_packets_queue.get(
+                    timeout=TIME_UNTIL_DISCONNECTION)
             except queue.Empty:
                 pass
         raise ClosedReceiverError()
@@ -49,7 +52,7 @@ class Receiver:
                 packet[:2], byteorder='big', signed=False)
             if (packet_seq_number == self.expected_seq_num):
                 if not self.received_packets_queue.full():
-                    if packet[2:] != b'': # This avoids pushing the OK null body as an actual message
+                    if packet[2:] != b'':  # This avoids pushing the OK null body as an actual message
                         self.received_packets_queue.put(packet[2:])
                     ack_message = (
                         ACK_TYPE_NUM).to_bytes(
@@ -61,7 +64,13 @@ class Receiver:
                     if self.expected_seq_num > MAX_SEQ_NUM:
                         self.expected_seq_num = 0
             else:
-                last_ack_seq_num = (self.expected_seq_num - 1) if self.expected_seq_num != 0 else MAX_SEQ_NUM
-                ack_message = (ACK_TYPE_NUM).to_bytes(1, byteorder='big', signed=False) + last_ack_seq_num.to_bytes(2, byteorder='big', signed=False)
+                last_ack_seq_num = (
+                    self.expected_seq_num -
+                    1) if self.expected_seq_num != 0 else MAX_SEQ_NUM
+                ack_message = (ACK_TYPE_NUM).to_bytes(1,
+                                                      byteorder='big',
+                                                      signed=False) + last_ack_seq_num.to_bytes(2,
+                                                                                                byteorder='big',
+                                                                                                signed=False)
                 self.sender.send(ack_message)
             packet = self.receiver.get()

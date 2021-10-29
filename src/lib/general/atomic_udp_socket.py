@@ -1,6 +1,7 @@
 import socket
 import threading
 
+
 class AtomicUDPSocket:
     def __init__(self):
         self.send_mutex = threading.Lock()
@@ -17,7 +18,9 @@ class AtomicUDPSocket:
         try:
             self.sckt.sendto(msg, addr)
             self.send_mutex.release()
-        except BaseException:  # There was a Connection Error detected by the OS (or some other kind of unknown error)
+        # There was a Connection Error detected by the OS (or some other kind
+        # of unknown error)
+        except BaseException:
             self.send_mutex.release()
             raise ConnectionRefusedError
 
@@ -26,7 +29,9 @@ class AtomicUDPSocket:
         try:
             self.sckt.send(msg)
             self.send_mutex.release()
-        except BaseException:  # There was a Connection Error detected by the OS (or some other kind of unknown error)
+        # There was a Connection Error detected by the OS (or some other kind
+        # of unknown error)
+        except BaseException:
             self.send_mutex.release()
             raise ConnectionRefusedError
 
