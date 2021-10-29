@@ -75,3 +75,6 @@ Argumentos opcionales:
 *  **-h, --help:** muestra una descripción de los parámetros y finaliza la ejecución.
 *  **-v, --verbose:** incrementa la verbosidad del output.
 *  **-q, --quiet:** decrementa la verbosidad del output.
+
+### Aclaraciones adicionales
+El enunciado del trabajo indica que el programa debe funcionar utilizando localhost, esto puede realizarse utilizando la ip 127.0.0.1 en las opciones de ip del programa.
