@@ -66,6 +66,8 @@ class StopAndWaitSender:
         if add_metadata:
             packet = (shared_constants.MSG_TYPE_NUM).to_bytes(1, byteorder='big') + self.seq_num.to_bytes(2, "big") + msg
         self.seq_num += 1
+        if self.seq_num > shared_constants.MAX_SEQ_NUM:
+            self.seq_num = 0
         self.mutex.release()
         return packet
     
